@@ -1,10 +1,12 @@
 const express = require('express');
+const { exec } = require('child_process');
 const app = express();
 
 app.use(express.static('templates'));
 app.use('/src', express.static('src'));
 
 const port = process.env.PORT || 3000;
+const host = '127.0.0.1';
 
 app.get('/api/hr', (req, res) => {
     const base = 110;
@@ -22,7 +24,14 @@ app.get('/api/temperature', (req, res) => {
     res.json({ temperatureF: tempF });
 });
 
-app.listen(port, () => {
-    console.log(`Mock HR API listening at http://localhost:${port}/api/hr`);
-    console.log(`Mock Temperature API listening at http://localhost:${port}/api/temperature`);
+app.listen(port, host, () => {
+    const hrUrl = `http://${host}:${port}/api/hr`;
+    const tempUrl = `http://${host}:${port}/api/temperature`;
+    const rootUrl = `http://${host}:${port}/`;
+    console.log(`Mock HR API listening at ${hrUrl}`);
+    console.log(`Mock Temperature API listening at ${tempUrl}`);
+
+    exec(`open ${rootUrl}`, (err) => {
+        if (err) console.error('Failed to open browser:', err);
+    });
 });

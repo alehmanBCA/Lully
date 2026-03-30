@@ -116,3 +116,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# During development, also look for static files in the `src/` folder
+from pathlib import Path as _Path
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+    BASE_DIR / 'src',
+]

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Parent Profile — Lully</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/profile.css' %}">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="top-left">
+        <div class="home-icon">🏠</div>
+        <div class="logo-row">
+          <div class="logo-mark">L</div>
+          <div class="title-block">
+            <h1>Parent Profile</h1>
+            <p class="subtitle">Manage your babies' monitoring</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="top-right">
+        <div class="account-box">
+          <div class="account-icon">👤</div>
+          <div class="account-text">
+            <div class="acc-name">Parent Account</div>
+            <div class="acc-sub">Logged in</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="controls">
+        <button class="btn add">+ Add Baby Profile</button>
+      </div>
+
+      <section class="cards" id="babyCards">
+        <article class="card">
+          <div class="card-header">
+            <div class="avatar avatar-blue">E</div>
+            <div class="card-title">
+              <div class="name">Emma</div>
+              <div class="age">6 months</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="label">Date of Birth:</div>
+              <div class="value">9/25/2025</div>
+            </div>
+            <div class="actions">
+              <a href="#" class="view">View Monitor</a>
+              <button class="delete" title="Delete">🗑️</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-header">
+            <div class="avatar avatar-pink">O</div>
+            <div class="card-title">
+              <div class="name">Oliver</div>
+              <div class="age">3 months</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="label">Date of Birth:</div>
+              <div class="value">12/25/2025</div>
+            </div>
+            <div class="actions">
+              <a href="#" class="view">View Monitor</a>
+              <button class="delete" title="Delete">🗑️</button>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="about">
+        <div class="about-inner">
+          <div class="about-icon">💠</div>
+          <div>
+            <h3>About Lully Monitor</h3>
+            <ul>
+              <li>Add multiple baby profiles to monitor all your children</li>
+              <li>Click on any baby profile to view their real-time health monitoring</li>
+              <li>Each baby has their own dedicated monitoring dashboard</li>
+              <li>Data is saved locally on your device</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="{% static 'js/profile.js' %}"></script>
+</body>
+</html>

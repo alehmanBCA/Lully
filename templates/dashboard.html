@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Lully — Dashboard</title>
+  <style>
+    body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;margin:0;background:#f3fbff;display:flex;align-items:center;justify-content:center;height:100vh}
+    .card{background:white;padding:28px;border-radius:12px;box-shadow:0 8px 24px rgba(6,41,70,0.08);width:360px;text-align:center}
+    h1{margin:0 0 8px;color:#0b4a66}
+    p{color:#6b7c93;margin:0 0 18px}
+    .btn{display:block;margin:10px 0;padding:10px 14px;border-radius:10px;border:0;font-weight:600;cursor:pointer}
+    .btn.primary{background:#2ea0ff;color:#fff}
+    .btn.ghost{background:transparent;border:1px solid #d8eaf6;color:#0b4a66}
+    .links{margin-top:12px;font-size:13px;color:#6b7c93}
+    a.link{color:#2ea0ff;text-decoration:none;margin:0 6px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Lully</h1>
+    <p>Welcome — quick access to authentication and pages</p>
+
+    <a href="/login/" class="btn primary">Log in</a>
+    <a href="/signup/" class="btn ghost">Sign up</a>
+  <a href="/profile/" class="btn" style="background:#e9f8ff;color:#0b4a66">Open Profile</a>
+    <a href="/admin/" class="btn" style="background:#fff;color:#0b4a66;border:1px solid #eef6fb">Admin</a>
+
+    <div class="links">
+      Quick links:
+      <a class="link" href="/">Home</a>
+      <a class="link" href="/signup/">Signup</a>
+      <a class="link" href="/login/">Login</a>
+    </div>
+  </div>
+</body>
+</html>

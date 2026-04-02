@@ -62,6 +62,19 @@ body {
   font-weight: 700;
 }
 
+/* Ensure any image inside the logo box fits and is not stretched */
+.logo-mark {
+  overflow: hidden;
+}
+
+.logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  border-radius: inherit;
+}
+
 .title-block h1 {
   margin: 0;
   font-size: 34px;

@@ -3,6 +3,9 @@ html, body {
     margin: 0;
     font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
     background: #f3fbff;
+}
+
+body {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -69,12 +72,516 @@ a.link{
     padding:10px
 }
 
-.btn.admin{
-    background:#fff;
-    color:#0b4a66;
-    border:1px solid #eef6fb
-}
 
 @media (max-width:420px){
   .btn{display:block;width:100%;min-width:0}
+}
+
+
+/* login css */
+
+.container{
+    border:1px solid #d8eaf6;
+    padding:28px;
+    border-radius:12px;
+    width:100%;
+}
+
+
+.login-wrapper, .signup-wrapper {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3fbff;
+}
+
+.login-card, .signup-card {
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(6,41,70,0.08);
+    width: 360px;
+    text-align: center;
+}
+
+.login-card h2, .signup-card h2 {
+    margin: 0 0 24px;
+    color: #0b4a66;
+    font-size: 24px;
+}
+
+.login-form, .signup-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+.form-group label {
+    color: #0b4a66;
+    font-weight: 500;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+.form-group input {
+    padding: 10px 12px;
+    border: 1px solid #d8eaf6;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #2ea0ff;
+    box-shadow: 0 0 0 3px rgba(46,160,255,0.1);
+}
+
+.login-btn, .signup-btn {
+    background: #2ea0ff;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.2s;
+    margin-top: 8px;
+}
+
+.login-btn:hover, .signup-btn:hover {
+    background: #1a8cdb;
+}
+
+.login-footer, .signup-footer {
+    margin-top: 20px;
+    font-size: 14px;
+    color: #6b7c93;
+}
+
+.login-footer a, .signup-footer a {
+    color: #2ea0ff;
+    text-decoration: none !important;
+    font-weight: 600;
+}
+
+.login-footer a:hover, .signup-footer a:hover {
+    text-decoration: underline;
+}
+
+.error-messages {
+    background: #fff0f0;
+    color: #c41e3a;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+.error-messages ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.error-messages li {
+    margin: 4px 0;
+}
+
+/* signup */
+
+.signup-wrapper {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3fbff;
+}
+
+.signup-card {
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(6,41,70,0.08);
+    width: 360px;
+    text-align: center;
+}
+
+.signup-card h2 {
+    margin: 0 0 24px;
+    color: #0b4a66;
+    font-size: 24px;
+}
+
+.signup-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.signup-form-group {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+.signup-form-group label {
+    color: #0b4a66;
+    font-weight: 500;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+.signup-form-group input {
+    padding: 10px 12px;
+    border: 1px solid #d8eaf6;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.signup-form-group input:focus {
+    outline: none;
+    border-color: #2ea0ff;
+    box-shadow: 0 0 0 3px rgba(46,160,255,0.1);
+}
+
+.signup-btn {
+    background: #2ea0ff;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.2s;
+    margin-top: 8px;
+}
+
+.signup-btn:hover {
+    background: #1a8cdb;
+}
+
+.signup-footer {
+    margin-top: 20px;
+    font-size: 14px;
+    color: #6b7c93;
+}
+
+.signup-footer a {
+    color: #2ea0ff;
+    text-decoration: none !important;
+    font-weight: 600;
+}
+
+.signup-footer a:hover {
+    text-decoration: underline;
+}
+
+.signup-error-messages {
+    background: #fff0f0;
+    color: #c41e3a;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+.signup-error-messages ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.signup-error-messages li {
+    margin: 4px 0;
+}
+
+/* dashboard page */
+
+.dashboard-page {
+    display: block;
+    min-height: 100vh;
+    margin: 0;
+    background: #cfe8f4;
+}
+
+html:has(body.dashboard-page) {
+    background: #cfe8f4;
+}
+
+body.dashboard-page {
+    width: 100%;
+    min-height: 100vh;
+    background: #cfe8f4;
+}
+
+.dashboard-shell {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 36px 10px 40px;
+    color: #334155;
+}
+
+.dash-hero {
+    text-align: center;
+    margin-bottom: 34px;
+}
+
+.dash-logo-badge {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 18px;
+    border: 3px solid #1f4a86;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.35);
+}
+
+.dash-logo-icon {
+    font-size: 34px;
+    line-height: 1;
+}
+
+.dash-logo-text {
+    margin-top: 4px;
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1;
+    color: #1f3d75;
+}
+
+.dash-title {
+    margin: 0;
+    font-size: 48px;
+    line-height: 1.25;
+    color: #374457;
+    font-weight: 700;
+}
+
+.dash-subtitle {
+    max-width: 820px;
+    margin: 18px auto 0;
+    color: #4b5563;
+    font-size: 18px;
+    line-height: 1.45;
+}
+
+.dash-primary-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 26px;
+    background: #1e97e8;
+    color: #fff;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 17px;
+    line-height: 1;
+    border-radius: 999px;
+    padding: 24px 44px;
+    box-shadow: 0 10px 22px rgba(30,151,232,0.24);
+}
+
+.dash-feature-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+}
+
+.dash-feature-card {
+    background: #e7edf1;
+    border-radius: 18px;
+    padding: 26px 22px;
+    text-align: center;
+}
+
+.dash-feature-icon {
+    width: 66px;
+    height: 66px;
+    border-radius: 50%;
+    margin: 0 auto 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+}
+
+.dash-icon-blue { background: #d2e2f7; color: #1a8fda; }
+.dash-icon-pink { background: #f4d8e8; color: #eb4a98; }
+.dash-icon-orange { background: #f7e5cf; color: #ef7d1a; }
+.dash-icon-purple { background: #e8def7; color: #9b4ce9; }
+
+.dash-feature-card h3 {
+    margin: 0 0 8px;
+    color: #0b4a78;
+    font-size: 20px;
+}
+
+.dash-feature-card p {
+    margin: 0;
+    color: #475569;
+    font-size: 15px;
+    line-height: 1.4;
+}
+
+.dash-trust-box {
+    margin-top: 34px;
+    background: #e7edf1;
+    border-radius: 18px;
+    padding: 28px 38px;
+}
+
+.dash-trust-icon {
+    text-align: center;
+    color: #1e97e8;
+    font-size: 36px;
+}
+
+.dash-trust-box h2 {
+    text-align: center;
+    color: #0c4a78;
+    font-size: 58px;
+    margin: 4px 0 18px;
+}
+
+.dash-trust-list {
+    margin: 0;
+    padding-left: 36px;
+}
+
+.dash-trust-list li {
+    margin: 12px 0;
+    color: #334155;
+    font-size: 17px;
+    line-height: 1.38;
+}
+
+.dash-trust-list li::marker {
+    color: #1e97e8;
+}
+
+.dash-trust-list strong {
+    color: #0c4a78;
+}
+
+.dash-cta-box {
+    margin-top: 34px;
+    border-radius: 18px;
+    padding: 52px 20px;
+    text-align: center;
+    background: linear-gradient(135deg, #1f9ae7, #1586d1);
+    color: #fff;
+}
+
+.dash-cta-box h2 {
+    margin: 0;
+    font-size: 56px;
+}
+
+.dash-cta-box p {
+    margin: 16px auto 0;
+    max-width: 820px;
+    font-size: 18px;
+    color: rgba(255,255,255,0.95);
+}
+
+.dash-cta-btn {
+    margin-top: 28px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff;
+    color: #1b93df;
+    text-decoration: none;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 20px 34px;
+    font-size: 17px;
+}
+
+.dash-footer {
+    text-align: center;
+    margin-top: 28px;
+    color: #475569;
+    font-size: 13px;
+}
+
+@media (max-width: 980px) {
+    .dashboard-shell {
+        padding: 24px 12px 34px;
+    }
+
+    .dash-title {
+        font-size: 34px;
+    }
+
+    .dash-subtitle,
+    .dash-feature-card p,
+    .dash-trust-list li,
+    .dash-cta-box p,
+    .dash-footer {
+        font-size: 16px;
+    }
+
+    .dash-primary-btn,
+    .dash-cta-btn {
+        font-size: 16px;
+        padding: 16px 24px;
+    }
+
+    .dash-feature-card h3 {
+        font-size: 26px;
+    }
+
+    .dash-trust-box h2,
+    .dash-cta-box h2 {
+        font-size: 42px;
+    }
+}
+
+@media (max-width: 720px) {
+    .dash-feature-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dash-title {
+        font-size: 28px;
+    }
+
+    .dash-subtitle,
+    .dash-feature-card p,
+    .dash-trust-list li,
+    .dash-cta-box p,
+    .dash-footer {
+        font-size: 16px;
+    }
+
+    .dash-feature-card h3 {
+        font-size: 24px;
+    }
+
+    .dash-trust-box h2,
+    .dash-cta-box h2 {
+        font-size: 34px;
+    }
+
+    .dash-primary-btn,
+    .dash-cta-btn {
+        font-size: 20px;
+    }
 }

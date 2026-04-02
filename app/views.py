@@ -15,7 +15,10 @@ def signup(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-        if User.objects.filter(username=username).exists():
+        confirm_password = request.POST.get('confirm_password')
+        if password != confirm_password:
+            messages.error(request, 'Passwords do not match')
+        elif User.objects.filter(username=username).exists():
             messages.error(request, 'Username already exists')
         else:
             user = User.objects.create_user(username=username, password=password)
@@ -30,7 +33,7 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             auth_login(request, user)
-            return redirect('home')
+            return redirect('profile')
         else:
             messages.error(request, 'Invalid credentials')
     return render(request, 'login.html')

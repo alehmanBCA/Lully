@@ -36,48 +36,36 @@
       <div class="controls">
         <button class="btn add">+ Add Baby Profile</button>
       </div>
-
+      
+      <!-- Angel's stuff -->
       <section class="cards" id="babyCards">
+        {% for baby in babies %}
         <article class="card">
           <div class="card-header">
-            <div class="avatar avatar-blue">E</div>
+            <div class="avatar avatar-blue">{{ baby.name|slice:":1" }}</div>
             <div class="card-title">
-              <div class="name">Emma</div>
-              <div class="age">6 months</div>
+              <div class="name">{{ baby.name }}</div>
+              <div class="age">{{ baby.birth_date }}</div> </div>
             </div>
-          </div>
-          <div class="card-body">
-            <div class="row">
-              <div class="label">Date of Birth:</div>
-              <div class="value">9/25/2025</div>
+            <div class="card-body">
+              <div class="row">
+                <div class="label">Date of Birth:</div>
+                <div class="value">{{ baby.birth_date|date:"m/d/Y" }}</div>
+              </div>
             </div>
             <div class="actions">
-              <a href="#" class="view">View Monitor</a>
+              <a href="{% url 'monitor_dashboard' baby.id %}" class="view">View Monitor</a>
               <button class="delete" title="Delete">🗑️</button>
             </div>
           </div>
         </article>
-
-        <article class="card">
-          <div class="card-header">
-            <div class="avatar avatar-pink">O</div>
-            <div class="card-title">
-              <div class="name">Oliver</div>
-              <div class="age">3 months</div>
-            </div>
-          </div>
-          <div class="card-body">
-            <div class="row">
-              <div class="label">Date of Birth:</div>
-              <div class="value">12/25/2025</div>
-            </div>
-            <div class="actions">
-              <a href="#" class="view">View Monitor</a>
-              <button class="delete" title="Delete">🗑️</button>
-            </div>
-          </div>
-        </article>
+        {% empty %}
+        <p>No baby profiles found. Click "Add Baby Profile" to get started!</p>
+        {% endfor %}
       </section>
+      <!-- Angel's stuff -->
+
+      
 
       <section class="about">
         <div class="about-inner">

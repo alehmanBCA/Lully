@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="monitor-container">
+    <header class="monitor-header">
+        <div class="baby-meta">
+            <h2>Monitoring {{ baby.name }}</h2>
+            <span class="status-tag {% if device.is_online %}online{% else %}offline{% endif %}">
+                ● {{ device.is_online|yesno:"Connected,Searching..." }}
+            </span>
+        </div>
+        <div class="battery">🔋 {{ device.battery_level }}%</div>
+    </header>
+
+    <div class="vitals-grid">
+        <div class="vital-card hr">
+            <h3>Heart Rate</h3>
+            <div class="value-row">
+                <span id="live-hr" class="large-val">{{ vitals.heart_rate|default:"--" }}</span>
+                <span class="unit">BPM</span>
+            </div>
+            <div class="sparkline">Pulse Waveform Placeholder</div>
+        </div>
+
+        <div class="vital-card spo2">
+            <h3>Oxygen</h3>
+            <div class="value-row">
+                <span id="live-spo2" class="large-val">{{ vitals.oxygen_level|default:"--" }}</span>
+                <span class="unit">%</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="env-row">
+        <div class="env-box">
+            <p>Baby Temp</p>
+            <strong>{{ vitals.baby_temperature }}°C</strong>
+        </div>
+        <div class="env-box">
+            <p>Room</p>
+            <strong>{{ vitals.room_temperature }}°C / {{ vitals.room_humidity }}%</strong>
+        </div>
+    </div>
+</div>
+
+<script>
+    const CURRENT_BABY_ID = "{{ baby.id }}";
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<canvas id="hrChart" width="400" height="200"></canvas>
+
+<script src="{% static 'js/app.js' %}"></script>
+
+{% endblock %}

@@ -1,25 +1,41 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
     <title>Sign Up</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/dashboard.css' %}">
 </head>
-<body>
-    <h2>Sign Up</h2>
-    {% if messages %}
-        <ul>
-        {% for message in messages %}
-            <li>{{ message }}</li>
-        {% endfor %}
-        </ul>
-    {% endif %}
-    <form method="post">
-        {% csrf_token %}
-        <label for="username">Username:</label>
-        <input type="text" name="username" required><br>
-        <label for="password">Password:</label>
-        <input type="password" name="password" required><br>
-        <button type="submit">Sign Up</button>
-    </form>
-    <p>Already have an account? <a href="/app/login/">Login here</a>.</p>
+<body class="signup-wrapper">
+    <div class="signup-card">
+        <h2>Sign Up</h2>
+        {% if messages %}
+            <div class="signup-error-messages">
+                <ul>
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+        <form method="post" class="signup-form">
+            {% csrf_token %}
+            <div class="signup-form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="signup-form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div class="signup-form-group">
+                <label for="confirm_password">Confirm Password</label>
+                <input type="password" id="confirm_password" name="confirm_password" required>
+            </div>
+            <button type="submit" class="signup-btn">Sign Up</button>
+        </form>
+        <div class="signup-footer">
+            Already have an account? <a href="{% url 'login' %}">Login here</a>
+        </div>
+    </div>
 </body>
 </html>

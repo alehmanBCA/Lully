@@ -2,14 +2,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Login</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login • Lully</title>
     <link rel="stylesheet" type="text/css" href="{% static 'css/dashboard.css' %}">
 </head>
-<body class="login-wrapper">
-    <div class="login-card">
+<body class="auth-page auth-login-page">
+    <main class="auth-shell">
+        <section class="auth-spotlight">
+            <a class="auth-brand" href="{% url 'home' %}">
+                <img src="{% static 'images/logo.png' %}" alt="Lully logo" class="auth-brand-logo">
+                <div>
+                    <strong>Lully</strong>
+                    <span>smart baby monitoring</span>
+                </div>
+            </a>
+            <h1>Welcome back.</h1>
+            <p>Sign in to check live readings, alerts, and your baby’s latest vitals in one calm, beautiful place.</p>
+        </section>
+
+        <section class="auth-card">
         <h2>Login</h2>
         {% if messages %}
-            <div class="error-messages">
+            <div class="auth-messages">
                 <ul>
                 {% for message in messages %}
                     <li>{{ message }}</li>
@@ -17,21 +32,22 @@
                 </ul>
             </div>
         {% endif %}
-        <form method="post" class="login-form">
+        <form method="post" class="auth-form">
             {% csrf_token %}
-            <div class="form-group">
+            <div class="auth-field">
                 <label for="username">Username</label>
                 <input type="text" id="username" name="username" required>
             </div>
-            <div class="form-group">
+            <div class="auth-field">
                 <label for="password">Password</label>
                 <input type="password" id="password" name="password" required>
             </div>
-            <button type="submit" class="login-btn">Login</button>
+            <button type="submit" class="auth-btn">Login</button>
         </form>
-        <div class="login-footer">
+        <div class="auth-footer">
             Don't have an account? <a href="{% url 'signup' %}">Sign up here</a>
         </div>
-    </div>
+        </section>
+    </main>
 </body>
 </html>

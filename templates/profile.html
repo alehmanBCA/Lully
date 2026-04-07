@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,9 +12,11 @@
   <div class="app-shell">
     <header class="topbar">
       <div class="top-left">
-        <div class="home-icon">🏠</div>
+        <!-- removed house icon per request -->
         <div class="logo-row">
-          <div class="logo-mark">L</div>
+          <div class="logo-mark">
+            <img src="{% static 'images/Lully_logo.png' %}" alt="Lully Logo" class="logo-img">
+          </div>
           <div class="title-block">
             <h1>Parent Profile</h1>
             <p class="subtitle">Manage your babies' monitoring</p>
@@ -22,13 +25,17 @@
       </div>
 
       <div class="top-right">
-        <div class="account-box">
-          <div class="account-icon">👤</div>
+        <a href="{% url 'account_edit' %}" class="account-box" title="Edit account">
+          {% if profile_url %}
+            <img src="{{ profile_url }}" alt="profile" class="account-pfp" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
+          {% else %}
+            <div class="account-icon">👤</div>
+          {% endif %}
           <div class="account-text">
-            <div class="acc-name">Parent Account</div>
+            <div class="acc-name">{{ name|default:'Parent Account' }}</div>
             <div class="acc-sub">Logged in</div>
           </div>
-        </div>
+        </a>
       </div>
     </header>
 

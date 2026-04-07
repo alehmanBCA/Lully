@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,9 +26,13 @@
 
       <div class="top-right">
         <a href="{% url 'account_edit' %}" class="account-box" title="Edit account">
-          <div class="account-icon">👤</div>
+          {% if profile_url %}
+            <img src="{{ profile_url }}" alt="profile" class="account-pfp" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
+          {% else %}
+            <div class="account-icon">👤</div>
+          {% endif %}
           <div class="account-text">
-            <div class="acc-name">Parent Account</div>
+            <div class="acc-name">{{ name|default:'Parent Account' }}</div>
             <div class="acc-sub">Logged in</div>
           </div>
         </a>

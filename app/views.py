@@ -12,7 +12,22 @@ def home(request):
     return render(request, 'dashboard.html')
 
 def profile(request):
-    return render(request, 'profile.html')
+    user = request.user
+    profile_url = None
+    if user.is_authenticated:
+        # try to find an uploaded profile picture for this user
+        from django.conf import settings
+        for ext in ('.png', '.jpg', '.jpeg', '.gif'):
+            p = settings.MEDIA_ROOT / 'profile_pics' / f"{user.username}{ext}"
+            if p.exists():
+                profile_url = settings.MEDIA_URL + f'profile_pics/{user.username}{ext}'
+                break
+
+    name = ''
+    if user.is_authenticated:
+        name = user.first_name or user.get_username()
+
+    return render(request, 'profile.html', {'profile_url': profile_url, 'name': name})
 
 
 @login_required

@@ -16,10 +16,28 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  const addBtn = document.querySelector('.btn.add');
+  // const addBtn = document.querySelector('.btn.add');
   if(addBtn){
     addBtn.addEventListener('click', () => {
       alert('Add Baby Profile — implement creation flow');
     });
   }
 });
+
+
+// Angel's stuff
+function toggleModal(show) {
+    const modal = document.getElementById('addBabyModal');
+    if (show) {
+        modal.style.display = 'flex';
+    } else {
+        modal.style.display = 'none';
+    }
+}
+
+window.onclick = function(event) {
+    const modal = document.getElementById('addBabyModal');
+    if (event.target == modal) {
+        toggleModal(false);
+    }
+}

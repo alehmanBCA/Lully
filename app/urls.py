@@ -9,6 +9,6 @@ urlpatterns = [
     
     path('monitor/<int:baby_id>/', views.monitor_dashboard, name='monitor_dashboard'),
     path('api/baby/<int:baby_id>/vitals/', views.api_latest_vitals, name='api_vitals'),
-    # path('api/baby/<int:baby_id>/history/', views.baby_history_api, name='api_history'),
+    path('api/baby/<int:baby_id>/history/', views.baby_history_api, name='api_history'),
     
 ]

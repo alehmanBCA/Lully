@@ -64,7 +64,10 @@ def login_view(request):
 def monitor_dashboard(request, baby_id):
     baby = get_object_or_404(Baby, id=baby_id)
     latest_vitals = baby.readings.order_by('-timestamp').first()
-    device = DeviceStatus.objects.filter(baby=baby).first()
+    device, created = DeviceStatus.objects.get_or_create(
+        baby=baby, 
+        defaults={'is_online': False, 'battery_level': 0}
+        )
     
     return render(request, 'monitor.html', {
         'baby': baby,
@@ -77,8 +80,25 @@ def api_latest_vitals(request, baby_id):
     latest = baby.readings.order_by('-timestamp').first()
     
     return JsonResponse({
-        "heart_rate": latest.heart_rate if latest else "--",
-        "oxygen": latest.oxygen_level if latest else "--",
-        "temp": float(latest.baby_temperature) if latest else "--",
+        "heart_rate": latest.heart_rate if latest else None,
+        "oxygen": latest.oxygen_level if latest else None,
+        "max_heart_rate": baby.max_heart_rate,
+        "min_heart_rate": baby.min_heart_rate,
+        "min_oxygen_level": baby.min_oxygen_level,
         "status": latest.sleep_status if latest else "Unknown"
     })
+
+def baby_history_api(request, baby_id):
+    baby = get_object_or_404(Baby, id=baby_id)
+    readings = baby.readings.order_by('-timestamp')[:20]
+    
+    data = []
+    for r in readings:
+        data.append({
+            "timestamp": r.timestamp.strftime('%H:%M:%S'),
+            "heart_rate": r.heart_rate,
+            "oxygen": r.oxygen_level
+        })
+    
+
+    return JsonResponse(data, safe=False)

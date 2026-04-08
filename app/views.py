@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.conf import settings
 import os
 
+
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from .models import Baby, HealthReading, DeviceStatus
@@ -21,7 +22,6 @@ def home(request):
 
 
 def profile(request):
-<<<<<<< HEAD
     user = request.user
     profile_url = None
     if user.is_authenticated:
@@ -89,7 +89,6 @@ def account_edit(request):
             break
 
     return render(request, 'account_edit.html', {'profile_url': profile_url, 'name': user.first_name})
-=======
     if request.method == 'POST':
         form = BabyForm(request.POST)
         if form.is_valid():
@@ -103,7 +102,6 @@ def account_edit(request):
     return render(request, 'profile.html', {'babies': babies, 'form': form})
 
 
->>>>>>> 2526d4d9303cb649be27c073a33279e7ea5aeaa1
 
 def signup(request):
     if request.method == 'POST':

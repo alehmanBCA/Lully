@@ -7,8 +7,8 @@
   <title>Edit Account — Lully</title>
   <link rel="stylesheet" href="{% static 'css/profile.css' %}">
 </head>
-<body>
-  <div class="app-shell">
+<body class="account-edit-page">
+  <div class="edit-shell">
     <header class="topbar">
       <div class="top-left">
         <div class="logo-row">
@@ -24,7 +24,8 @@
     </header>
 
     <main class="content">
-      <section class="edit-account">
+      <section class="edit-panel">
+        <h2>Edit Account</h2>
         <form method="post" enctype="multipart/form-data">
           {% csrf_token %}
           <div class="form-row">
@@ -36,7 +37,7 @@
             <label for="pfp">Profile picture</label>
             {% if profile_url %}
               <div class="current-pfp">
-                <img src="{{ profile_url }}" alt="current pfp" style="max-width:80px; border-radius:50%;">
+                <img src="{{ profile_url }}" alt="current pfp" width="80" height="80" style="border-radius:50%; object-fit:cover;">
               </div>
             {% endif %}
             <input id="pfp" name="pfp" type="file" accept="image/*">

@@ -1,0 +1,84 @@
+:root {
+    --lully-navy: #03446F;
+    --lully-blue: #009FFF;
+    --lully-bg: #D1F1FF;
+    --safe-green: #CBEE9A;
+}
+
+.monitor-container {
+    background-color: var(--lully-bg);
+    padding: 20px;
+    min-height: 100vh;
+    font-family: 'Segoe UI', sans-serif;
+    color: var(--lully-navy);
+}
+
+.vitals-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.vital-card {
+    background: white;
+    border-radius: 20px;
+    padding: 25px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.large-val {
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: var(--lully-blue);
+}
+
+.status-tag.online { color: var(--safe-green); }
+.status-tag.offline { color: #ff6b6b; }
+
+.env-row {
+    display: flex;
+    justify-content: space-around;
+    background: rgba(255,255,255,0.5);
+    border-radius: 15px;
+    margin-top: 20px;
+    padding: 15px;
+}
+
+@keyframes heartPulse {
+    0% { transform: scale(1); filter: drop-shadow(0 0 0px rgba(0, 159, 255, 0)); }
+    25% { transform: scale(1.1); filter: drop-shadow(0 0 8px rgba(0, 159, 255, 0.6)); }
+    100% { transform: scale(1); filter: drop-shadow(0 0 0px rgba(0, 159, 255, 0)); }
+}
+
+.pulse-animation {
+    animation: heartPulse 0.6s ease-out;
+    display: inline-block;
+}
+
+
+
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(3, 68, 111, 0.85);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 1000;
+}
+
+.alert-box {
+    background: white;
+    padding: 40px;
+    border-radius: 30px;
+    text-align: center;
+    border: 5px solid #FF6B6B;
+    box-shadow: 0 0 50px rgba(255, 107, 107, 0.5);
+    animation: shake 0.5s ease-in-out infinite;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}

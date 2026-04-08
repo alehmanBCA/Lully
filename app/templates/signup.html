@@ -2,14 +2,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Sign Up</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up • Lully</title>
     <link rel="stylesheet" type="text/css" href="{% static 'css/dashboard.css' %}">
 </head>
-<body class="signup-wrapper">
-    <div class="signup-card">
+<body class="auth-page auth-signup-page">
+    <main class="auth-shell">
+        <section class="auth-spotlight">
+            <a class="auth-brand" href="{% url 'home' %}">
+                <img src="{% static 'images/logo.png' %}" alt="Lully logo" class="auth-brand-logo">
+                <div>
+                    <strong>Lully</strong>
+                    <span>smart baby monitoring</span>
+                </div>
+            </a>
+            <h1>Create your account.</h1>
+            <p>Set up Lully in a minute and start monitoring your baby with a cleaner, calmer experience.</p>
+        </section>
+
+        <section class="auth-card">
         <h2>Sign Up</h2>
         {% if messages %}
-            <div class="signup-error-messages">
+            <div class="auth-messages">
                 <ul>
                 {% for message in messages %}
                     <li>{{ message }}</li>
@@ -17,25 +32,27 @@
                 </ul>
             </div>
         {% endif %}
-        <form method="post" class="signup-form">
+        <form method="post" class="auth-form">
             {% csrf_token %}
-            <div class="signup-form-group">
+            <div class="auth-field">
                 <label for="username">Username</label>
                 <input type="text" id="username" name="username" required>
             </div>
-            <div class="signup-form-group">
+            <div class="auth-field">
                 <label for="password">Password</label>
                 <input type="password" id="password" name="password" required>
             </div>
-            <div class="signup-form-group">
+            <div class="auth-field">
                 <label for="confirm_password">Confirm Password</label>
                 <input type="password" id="confirm_password" name="confirm_password" required>
             </div>
-            <button type="submit" class="signup-btn">Sign Up</button>
+            <button type="submit" class="auth-btn">Create Account</button>
         </form>
-        <div class="signup-footer">
+        <div class="auth-footer">
             Already have an account? <a href="{% url 'login' %}">Login here</a>
         </div>
-    </div>
+        </section>
+    </main>
+    <script src="{% static 'js/visual-polish.js' %}" defer></script>
 </body>
 </html>

@@ -4,64 +4,117 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Lully — Dashboard</title>
+  <title>Lully — Smart Baby Monitoring</title>
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
 </head>
 <body class="dashboard-page">
-  <main class="dashboard-shell">
-    <section class="dash-hero">
-      <div class="dash-logo-badge">
-        <span class="dash-logo-icon">🧸</span>
-        <span class="dash-logo-text">Lully</span>
+  <div class="dashboard-backdrop"></div>
+  <main class="dashboard-shell landing-shell">
+    <header class="landing-nav">
+      <a class="brand-mark" href="{% url 'home' %}">
+        <img src="{% static 'images/logo.png' %}" alt="Lully logo" class="brand-logo">
+        <span class="brand-copy">
+          <strong>Lully</strong>
+          <small>smart baby monitoring</small>
+        </span>
+      </a>
+      <div class="landing-actions">
+        <a class="nav-link" href="{% url 'login' %}">Login</a>
+        <a class="nav-button" href="{% url 'signup' %}">Get Started</a>
+      </div>
+    </header>
+
+    <section class="hero-grid">
+      <div class="hero-copy">
+          <h1 class="hero-title">A simple way to see how your baby is doing.</h1>
+          <p class="hero-subtitle">View heart rate, temperature, and sleep in one clean dashboard.</p>
+
+        <div class="hero-actions">
+          <a class="hero-primary" href="{% url 'signup' %}">Start Monitoring</a>
+          <a class="hero-secondary" href="{% url 'login' %}">I already have an account</a>
+        </div>
+
       </div>
 
-      <h1 class="dash-title">The Smart Baby Monitor That Gives You Peace of Mind</h1>
-      <p class="dash-subtitle">Real-time health monitoring for your precious little one. Track heart rate and temperature with advanced sensors designed specifically for babies.</p>
+      <div class="hero-preview">
+        <div class="preview-card preview-main">
+          <div class="preview-head">
+            <img src="{% static 'images/logo.png' %}" alt="Lully logo" class="preview-logo">
+            <div>
+              <p>Lully monitor</p>
+            </div>
+          </div>
 
-      <a class="dash-primary-btn" href="{% url 'signup' %}">Get Started <span>→</span></a>
+          <div class="preview-metric">
+            <span class="metric-label">Heart Rate</span>
+            <strong>128 bpm</strong>
+          </div>
+
+          <div class="preview-metric">
+            <span class="metric-label">Temperature</span>
+            <strong>98.4 °F</strong>
+          </div>
+
+            <div class="preview-note">Helpful updates without constant checking.</div>
+        </div>
+      </div>
     </section>
 
-    <section class="dash-feature-grid">
-      <article class="dash-feature-card">
-        <div class="dash-feature-icon dash-icon-blue">〰</div>
-        <h3>Real-Time Monitoring</h3>
-        <p>Live updates every 5 seconds so you always know how your baby is doing</p>
+    <section class="feature-grid">
+      <article class="feature-card accent-blue">
+        <div class="feature-icon">●</div>
+          <h3>Real-Time Monitoring</h3>
+          <p>Regular updates when you want them.</p>
       </article>
-      <article class="dash-feature-card">
-        <div class="dash-feature-icon dash-icon-pink">♡</div>
+      <article class="feature-card accent-pink">
+        <div class="feature-icon">♥</div>
         <h3>Heart Rate Tracking</h3>
-        <p>Continuous heart rate monitoring with alerts for any irregularities</p>
+          <p>Clear readings and simple alerts.</p>
       </article>
-      <article class="dash-feature-card">
-        <div class="dash-feature-icon dash-icon-orange">🛡</div>
+      <article class="feature-card accent-orange">
+        <div class="feature-icon">◌</div>
         <h3>Temperature Control</h3>
-        <p>Precise temperature monitoring to ensure your baby stays comfortable</p>
+          <p>Track temperature trends easily.</p>
       </article>
-      <article class="dash-feature-card">
-        <div class="dash-feature-icon dash-icon-purple">☾</div>
+      <article class="feature-card accent-purple">
+        <div class="feature-icon">☾</div>
         <h3>Sleep Peacefully</h3>
-        <p>Rest easy knowing Lully is watching over your little one all night</p>
+          <p>Check in and move on with your day.</p>
       </article>
     </section>
 
-    <section class="dash-trust-box">
-      <div class="dash-trust-icon">◉</div>
-      <h2>Why Parents Trust Lully</h2>
-      <ul class="dash-trust-list">
-        <li><strong>Designed for Babies:</strong> Our sensors are specifically calibrated for infant vital signs, providing accurate readings that matter most.</li>
-        <li><strong>Safe &amp; Gentle:</strong> Non-invasive monitoring technology that's completely safe for your baby's delicate skin.</li>
-        <li><strong>Peace of Mind:</strong> Instant alerts when vitals fall outside normal ranges, so you can respond quickly when it matters.</li>
-        <li><strong>Multi-Baby Support:</strong> Monitor all your children from one convenient dashboard, perfect for families with multiple little ones.</li>
-      </ul>
+    <section class="trust-panel">
+        <h2>Clean, simple, and easy to use.</h2>
+      <div class="trust-grid">
+        <div class="trust-item">
+          <strong>Designed for babies</strong>
+            <p>Easy-to-read key readings.</p>
+        </div>
+        <div class="trust-item">
+          <strong>Safe and gentle</strong>
+            <p>A calm, thoughtful experience.</p>
+        </div>
+        <div class="trust-item">
+          <strong>Peace of mind</strong>
+            <p>Alerts help you stay aware.</p>
+        </div>
+        <div class="trust-item">
+          <strong>Family friendly</strong>
+          <p>Simple on any device.</p>
+        </div>
+      </div>
     </section>
 
-    <section class="dash-cta-box">
-      <h2>Ready to Experience Better Sleep?</h2>
-      <p>Join thousands of parents who trust Lully to keep their babies safe and healthy.</p>
-      <a class="dash-cta-btn" href="{% url 'signup' %}">Start Monitoring Now <span>→</span></a>
+    <section class="cta-panel">
+      <div>
+          <h2>Ready to check in?</h2>
+          <p>If you want a clearer view of your baby’s day, Lully keeps it simple.</p>
+      </div>
+        <a class="cta-button" href="{% url 'signup' %}">Get Started</a>
     </section>
 
-    <footer class="dash-footer">© 2026 Lully. Caring for your baby's health, one heartbeat at a time.</footer>
+      <footer class="page-footer">© 2026 Lully. Simple monitoring for parents.</footer>
   </main>
+  <script src="{% static 'js/visual-polish.js' %}" defer></script>
 </body>
 </html>

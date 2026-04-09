@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+
 {% load static %}
 
 {% block content %}
@@ -35,7 +35,7 @@
     <div class="env-row">
         <div class="env-box">
             <p>Baby Temp</p>
-            <strong>{{ vitals.baby_temperature }}°C</strong>
+            <strong id="temp">{{ vitals.baby_temperature|default:"--" }}°C</strong>
         </div>
         <div class="env-box">
             <p>Room</p>
@@ -52,5 +52,14 @@
 <canvas id="hrChart" width="400" height="200"></canvas>
 
 <script src="{% static 'js/app.js' %}"></script>
+
+<div id="alert-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content alert-box">
+        <div class="alert-icon">⚠️</div>
+        <h2>High Heart Rate Alert!</h2>
+        <p id="alert-text">The heart rate is currently 175 BPM.</p>
+        <button onclick="dismissAlert()" class="dismiss-btn">I am checking now</button>
+    </div>
+</div>
 
 {% endblock %}

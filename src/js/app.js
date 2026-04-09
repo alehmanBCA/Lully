@@ -4,44 +4,52 @@ function canRunMonitorScripts() {
     return typeof CURRENT_BABY_ID !== 'undefined' && CURRENT_BABY_ID;
 }
 
+function showAlert(currentHr) {
+    const modal = document.getElementById('alert-modal');
+    const alertText = document.getElementById('alert-text');
+    if (modal && alertText) {
+        alertText.innerHTML = `Warning: Heart rate is <strong>${currentHr} BPM</strong>, which is above the safe limit!`;
+        modal.style.display = 'flex';
+    }
+}
+
+function dismissAlert() {
+    const modal = document.getElementById('alert-modal');
+    if (modal) modal.style.display = 'none';
+}
+
 function pulseHeartRateElement() {
     const hrElement = document.getElementById('live-hr');
-    if (!hrElement) {
-        return;
-    }
-
+    if (!hrElement) return;
     hrElement.classList.remove('pulse-animation');
     void hrElement.offsetWidth;
     hrElement.classList.add('pulse-animation');
 }
 
 async function updateVitals() {
-    if (!canRunMonitorScripts()) {
-        return;
-    }
-
+    if (!canRunMonitorScripts()) return;
+    
     const hrElement = document.getElementById('live-hr');
     const spo2Element = document.getElementById('live-spo2');
-
-    if (!hrElement || !spo2Element) {
-        return;
-    }
-
+    if (!hrElement || !spo2Element) return;
     pulseHeartRateElement();
-
+    
     try {
         const response = await fetch(`/api/baby/${CURRENT_BABY_ID}/vitals/`);
-        if (!response.ok) {
-            throw new Error(`Vitals response error: ${response.status}`);
-        }
-
         const data = await response.json();
+        
         hrElement.textContent = data.heart_rate ?? '--';
         spo2Element.textContent = data.oxygen ?? data.oxygen_level ?? '--';
+
+        if (data.heart_rate && data.heart_rate > (data.max_heart_rate || 160)) {
+            showAlert(data.heart_rate);
+        }
     } catch (error) {
         console.error('Error fetching vitals:', error);
     }
 }
+
+
 
 function initChart() {
     if (!canRunMonitorScripts() || typeof Chart === 'undefined') {
@@ -126,8 +134,9 @@ async function fetchAndDisplayTemperature() {
     }
 }
 
+
 document.addEventListener('DOMContentLoaded', () => {
-    fetchAndDisplayTemperature();
+    // fetchAndDisplayTemperature();
 
     if (canRunMonitorScripts()) {
         updateVitals();

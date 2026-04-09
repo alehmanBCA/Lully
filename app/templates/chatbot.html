@@ -1,0 +1,29 @@
+{% load static %}
+<div class="lully-chatbot" data-chatbot>
+    <button class="lully-chatbot-launch" type="button" data-chatbot-toggle aria-expanded="false" aria-controls="lully-chatbot-panel">
+        <img src="{% static 'images/logo.png' %}" alt="Lully logo" class="lully-chatbot-launch-logo">
+        <span class="sr-only">Open Lully assistant</span>
+    </button>
+
+    <div class="lully-chatbot-overlay" data-chatbot-overlay hidden></div>
+
+    <aside id="lully-chatbot-panel" class="lully-chatbot-panel" aria-hidden="true">
+        <header class="lully-chatbot-header">
+            <div class="lully-chatbot-brand">
+                <img src="{% static 'images/logo.png' %}" alt="Lully logo" class="lully-chatbot-brand-logo">
+                <div>
+                    <strong>Lully Assistant</strong>
+                    <small>Ask me about Lully</small>
+                </div>
+            </div>
+            <button class="lully-chatbot-close" type="button" data-chatbot-close aria-label="Close chatbot">×</button>
+        </header>
+
+        <section class="lully-chatbot-messages" data-chatbot-messages aria-live="polite" aria-atomic="false"></section>
+
+        <form class="lully-chatbot-form" data-chatbot-form>
+            <input class="lully-chatbot-input" data-chatbot-input type="text" placeholder="Ask about Lully..." autocomplete="off" />
+            <button class="lully-chatbot-send" type="submit">Send</button>
+        </form>
+    </aside>
+</div>

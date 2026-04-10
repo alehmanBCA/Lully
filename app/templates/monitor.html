@@ -1,65 +1,44 @@
-
 {% load static %}
-
-{% block content %}
-<div class="monitor-container">
-    <header class="monitor-header">
-        <div class="baby-meta">
-            <h2>Monitoring {{ baby.name }}</h2>
-            <span class="status-tag {% if device.is_online %}online{% else %}offline{% endif %}">
-                ● {{ device.is_online|yesno:"Connected,Searching..." }}
-            </span>
-        </div>
-        <div class="battery">🔋 {{ device.battery_level }}%</div>
-    </header>
-
-    <div class="vitals-grid">
-        <div class="vital-card hr">
-            <h3>Heart Rate</h3>
-            <div class="value-row">
-                <span id="live-hr" class="large-val">{{ vitals.heart_rate|default:"--" }}</span>
-                <span class="unit">BPM</span>
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="{% static 'css/monitor.css' %}">
+</head>
+<body>
+    <div class="monitor-container">
+        <header class="monitor-header">
+            <div class="baby-meta">
+                <h2>Monitoring {{ baby.name }}</h2>
+                <span class="status-tag online">● Live Connection</span>
             </div>
-            <div class="sparkline">Pulse Waveform Placeholder</div>
-        </div>
+        </header>
 
-        <div class="vital-card spo2">
-            <h3>Oxygen</h3>
-            <div class="value-row">
-                <span id="live-spo2" class="large-val">{{ vitals.oxygen_level|default:"--" }}</span>
-                <span class="unit">%</span>
+        <div class="vitals-grid">
+            <div class="vital-card hr">
+                <h3>Heart Rate</h3>
+                <div class="value-row">
+                    <span id="live-hr" class="large-val">--</span>
+                    <span class="unit">BPM</span>
+                </div>
+                <div class="pulse-icon">❤️</div>
+            </div>
+
+            <div class="vital-card temp">
+                <h3>Temperature</h3>
+                <div class="value-row">
+                    <span id="live-temp" class="large-val">--</span>
+                    <span class="unit">°F</span>
+                </div>
+                <div class="pulse-icon">🌡️</div>
             </div>
         </div>
     </div>
 
-    <div class="env-row">
-        <div class="env-box">
-            <p>Baby Temp</p>
-            <strong id="temp">{{ vitals.baby_temperature|default:"--" }}°C</strong>
-        </div>
-        <div class="env-box">
-            <p>Room</p>
-            <strong>{{ vitals.room_temperature }}°C / {{ vitals.room_humidity }}%</strong>
-        </div>
-    </div>
-</div>
-
-<script>
-    const CURRENT_BABY_ID = "{{ baby.id }}";
-</script>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<canvas id="hrChart" width="400" height="200"></canvas>
-
-<script src="{% static 'js/app.js' %}"></script>
-
-<div id="alert-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-content alert-box">
-        <div class="alert-icon">⚠️</div>
-        <h2>High Heart Rate Alert!</h2>
-        <p id="alert-text">The heart rate is currently 175 BPM.</p>
-        <button onclick="dismissAlert()" class="dismiss-btn">I am checking now</button>
-    </div>
-</div>
-
-{% endblock %}
+    <script>
+        // These constants tell app.js where to find your Node.js mock server
+        const HR_API_URL = "http://127.0.0.1:3000/api/hr";
+        const TEMP_API_URL = "http://127.0.0.1:3000/api/temperature";
+    </script>
+    <script src="{% static 'js/app.js' %}"></script>
+</body>
+</html>

@@ -78,8 +78,6 @@ a.link{
 }
 
 
-/* login css */
-
 .container{
     border:1px solid #d8eaf6;
     padding:28px;
@@ -197,8 +195,6 @@ a.link{
     margin: 4px 0;
 }
 
-/* signup */
-
 .signup-wrapper {
     height: 100vh;
     display: flex;
@@ -307,8 +303,6 @@ a.link{
 .signup-error-messages li {
     margin: 4px 0;
 }
-
-/* dashboard page */
 
 .dashboard-page {
     display: block;
@@ -585,8 +579,6 @@ body.dashboard-page {
         font-size: 20px;
     }
 }
-
-/* refreshed landing + auth styling */
 
 body.dashboard-page,
 body.auth-page {

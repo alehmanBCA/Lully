@@ -12,66 +12,12 @@ from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from .models import Baby, HealthReading, DeviceStatus
 from .forms import BabyForm
-from django.core.paginator import Paginator
-from notifypy import Notify
-from django.contrib.admin.views.decorators import staff_member_required
-from django.views.decorators.http import require_http_methods
-from django.contrib.admin.views.decorators import staff_member_required
-from django.views.decorators.http import require_POST
 
 # Create your views here.
 def home(request):
-    notification = Notify()
-    notification.title = "Cool Title"
-    notification.message = "Even cooler message."
-    notification.send()
     return render(request, 'dashboard.html')
 
-def admin_dashboard(request):
-    return render(request, 'admin_dashboard.html')
 
-@staff_member_required
-def admin_users(request):
-    qs = User.objects.all().order_by('-date_joined')
-    paginator = Paginator(qs, 25)
-    page_num = request.GET.get('page', 1)
-    page = paginator.get_page(page_num)
-
-    return render(request, 'admin_users.html', {'page': page})
-
-@staff_member_required
-@require_POST
-def admin_toggle_active(request, user_id):
-    target = get_object_or_404(User, pk=user_id)
-    if target == request.user:
-        messages.error(request, "You can't deactivate yourself.")
-        return redirect('admin_users')
-    target.is_active = not target.is_active
-    target.save()
-    messages.success(request, f"{target.username} {'activated' if target.is_active else 'deactivated'}.")
-    return redirect('admin_users')
-
-
-@staff_member_required
-@require_http_methods(["GET", "POST"])
-def admin_edit_user(request, user_id):
-    """Allow staff to edit basic fields for another user."""
-    target = get_object_or_404(User, pk=user_id)
-
-    if request.method == 'POST':
-        name = request.POST.get('first_name', '').strip()
-        email = request.POST.get('email', '').strip()
-        is_active = True if request.POST.get('is_active') == 'on' else False
-
-        if name:
-            target.first_name = name
-        target.email = email
-        target.is_active = is_active
-        target.save()
-        messages.success(request, f"Saved changes for {target.username}.")
-        return redirect('admin_users')
-
-    return render(request, 'admin_user_edit.html', {'target': target})
 
 @login_required
 def profile(request):

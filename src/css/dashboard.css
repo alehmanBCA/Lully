@@ -782,13 +782,11 @@ body.auth-page::before {
     transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
-.admin-link {
-    color: white;
-    font-weight: 700;
-    padding: 12px 16px;
-    background: rgb(66, 227, 66);
-    border-radius: 999px;
-    box-shadow: 0 12px 26px rgba(66,227,66,0.24);
+.nav-button,
+.hero-primary,
+.hero-secondary,
+.cta-button,
+.auth-btn {
 }
 
 .nav-link {
@@ -914,8 +912,17 @@ body.auth-page::before {
 .nav-button:hover,
 .cta-button:hover,
 .auth-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 16px 32px rgba(26,133,216,0.28);
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 18px 34px rgba(26,133,216,0.28);
+}
+
+.hero-primary:active,
+.hero-secondary:active,
+.nav-button:active,
+.cta-button:active,
+.auth-btn:active {
+    transform: translateY(0) scale(0.995);
+    box-shadow: 0 10px 22px rgba(26,133,216,0.2);
 }
 
 .hero-secondary {
@@ -1039,7 +1046,7 @@ body.auth-page::before {
     margin-bottom: 22px;
 }
 
-.feature-card,
+.feature-face,
 .trust-panel,
 .cta-panel,
 .auth-card,
@@ -1053,8 +1060,49 @@ body.auth-page::before {
 }
 
 .feature-card {
+    position: relative;
+    border-radius: 24px;
+    min-height: 214px;
+    perspective: 1000px;
+    outline: none;
+}
+
+.feature-flip {
+    position: relative;
+    width: 100%;
+    min-height: 214px;
+    transform-style: preserve-3d;
+    transition: transform 1500ms cubic-bezier(0.2, 0.75, 0.2, 1);
+    transition-delay: 0s;
+}
+
+.feature-card:hover .feature-flip,
+.feature-card:focus .feature-flip,
+.feature-card:focus-within .feature-flip,
+.feature-card:active .feature-flip {
+    transition-delay: 220ms;
+    transform: rotateY(180deg);
+}
+
+.feature-face {
+    position: absolute;
+    inset: 0;
     border-radius: 24px;
     padding: 22px;
+    backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.feature-front {
+    justify-content: flex-start;
+}
+
+.feature-back {
+    transform: rotateY(180deg);
+    align-items: center;
+    justify-content: center;
+    text-align: center;
 }
 
 .feature-icon {
@@ -1085,6 +1133,11 @@ body.auth-page::before {
     color: #4d6376;
     font-size: 15px;
     line-height: 1.6;
+}
+
+.feature-back p {
+    font-size: 17px;
+    max-width: 16ch;
 }
 
 .trust-panel,

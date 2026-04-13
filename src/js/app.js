@@ -1,7 +1,7 @@
 let hrChart = null;
 
 function canRunMonitorScripts() {
-    return typeof CURRENT_BABY_ID !== 'undefined' && CURRENT_BABY_ID;
+    return typeof HR_API_URL !== 'undefined' && typeof TEMP_API_URL !== 'undefined';
 }
 
 function showAlert(currentHr) {
@@ -26,26 +26,55 @@ function pulseHeartRateElement() {
     hrElement.classList.add('pulse-animation');
 }
 
+// async function updateVitals() {
+//     if (!canRunMonitorScripts()) return;
+    
+//     const hrElement = document.getElementById('live-hr');
+//     const spo2Element = document.getElementById('live-spo2');
+//     if (!hrElement || !spo2Element) return;
+//     pulseHeartRateElement();
+    
+//     try {
+//         const response = await fetch(`/api/baby/${CURRENT_BABY_ID}/vitals/`);
+//         const data = await response.json();
+        
+//         hrElement.textContent = data.heart_rate ?? '--';
+//         spo2Element.textContent = data.oxygen ?? data.oxygen_level ?? '--';
+
+//         if (data.heart_rate && data.heart_rate > (data.max_heart_rate || 160)) {
+//             showAlert(data.heart_rate);
+//         }
+//     } catch (error) {
+//         console.error('Error fetching vitals:', error);
+//     }
+// }
+
 async function updateVitals() {
     if (!canRunMonitorScripts()) return;
     
     const hrElement = document.getElementById('live-hr');
-    const spo2Element = document.getElementById('live-spo2');
-    if (!hrElement || !spo2Element) return;
-    pulseHeartRateElement();
+    const tempElement = document.getElementById('live-temp');
     
     try {
-        const response = await fetch(`/api/baby/${CURRENT_BABY_ID}/vitals/`);
-        const data = await response.json();
-        
-        hrElement.textContent = data.heart_rate ?? '--';
-        spo2Element.textContent = data.oxygen ?? data.oxygen_level ?? '--';
-
-        if (data.heart_rate && data.heart_rate > (data.max_heart_rate || 160)) {
-            showAlert(data.heart_rate);
+        const hrResponse = await fetch(HR_API_URL);
+        const hrData = await hrResponse.json();
+        if (hrElement) {
+            hrElement.textContent = hrData.heartRate;
+            if (hrData.heartRate > 150) hrElement.style.color = "#ff6b6b";
+            else hrElement.style.color = "#03446F";
         }
-    } catch (error) {
-        console.error('Error fetching vitals:', error);
+    } catch (err) {
+        console.error("Heart Rate API Error:", err);
+    }
+
+    try {
+        const tempResponse = await fetch(TEMP_API_URL);
+        const tempData = await tempResponse.json();
+        if (tempElement) {
+            tempElement.textContent = tempData.temperatureF.toFixed(1);
+        }
+    } catch (err) {
+        console.error("Temperature API Error:", err);
     }
 }
 
@@ -108,42 +137,65 @@ async function updateChartHistory() {
     }
 }
 
-async function fetchAndDisplayTemperature() {
-    const tempElement = document.getElementById('temp');
-    if (!tempElement) {
-        return;
+async function fetchVitals() {
+    if (!canRunMonitorScripts()) return;
+
+    const hrElement = document.getElementById("live-hr");
+    const tempElement = document.getElementById("live-temp");
+
+    // Fetch Heart Rate
+    try {
+        const res = await fetch(HR_API_URL);
+        const data = await res.json();
+        
+        if (hrElement && typeof data.heartRate === "number") {
+            hrElement.textContent = data.heartRate;
+            // Visual warning if HR is too high
+            hrElement.style.color = data.heartRate > 150 ? "#ff6b6b" : "#03446F";
+        }
+    } catch (err) {
+        console.error("HR fetch failed:", err);
+        if (hrElement) hrElement.textContent = "--";
     }
 
+    // Fetch Temperature
     try {
-        const response = await fetch('/api/temperature');
-        if (!response.ok) {
-            throw new Error(`Temperature response error: ${response.status}`);
+        const res = await fetch(TEMP_API_URL);
+        const data = await res.json();
+        
+        if (tempElement && typeof data.temperatureF === "number") {
+            tempElement.textContent = data.temperatureF.toFixed(1);
         }
-
-        const tempData = await response.json();
-        const tempF = tempData.temperatureF ?? tempData.temperature;
-
-        if (typeof tempF !== 'number') {
-            throw new Error(`Unexpected payload: ${JSON.stringify(tempData)}`);
-        }
-
-        tempElement.textContent = `${tempF.toFixed(1)} °F`;
-    } catch (error) {
-        console.error('Error fetching temperature:', error);
-        tempElement.textContent = 'Failed to load temperature';
+    } catch (err) {
+        console.error("Temp fetch failed:", err);
+        if (tempElement) tempElement.textContent = "--";
     }
 }
 
+setInterval(() => {
+    fetchHeartRate();
+    fetchTemperature();
+}, 2000);
+
+fetchHeartRate();
+fetchTemperature();
+
 
 document.addEventListener('DOMContentLoaded', () => {
-    // fetchAndDisplayTemperature();
 
     if (canRunMonitorScripts()) {
-        updateVitals();
-        initChart();
-        updateChartHistory();
-
-        setInterval(updateVitals, 5000);
-        setInterval(updateChartHistory, 10000);
+        console.log("Live monitoring started...");
+        fetchVitals();
+        setInterval(fetchVitals, 5000);
+    } else {
+        console.error("Monitoring failed to start: API URLs are missing.");
     }
+    // if (canRunMonitorScripts()) {
+    //     updateVitals();
+    //     initChart();
+    //     updateChartHistory();
+
+    //     setInterval(updateVitals, 5000);
+    //     setInterval(updateChartHistory, 10000);
+    // }
 });

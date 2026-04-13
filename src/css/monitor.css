@@ -16,22 +16,43 @@
 .vitals-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 15px;
+    /* gap: 15px; */
+    gap: 24px;
     margin-top: 20px;
 }
 
-.vital-card {
+/* .vital-card {
     background: white;
     border-radius: 20px;
     padding: 25px;
     text-align: center;
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+} */
+.vital-card {
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 40px 20px;
+    box-shadow: 0 10px 30px rgba(0, 159, 255, 0.1);
+    transition: transform 0.3s ease;
+    border: 1px solid rgba(0, 159, 255, 0.05);
+}
+.vital-card:hover {
+    transform: translateY(-5px);
 }
 
-.large-val {
+/* .large-val {
     font-size: 3.5rem;
     font-weight: 800;
     color: var(--lully-blue);
+} */
+.large-val {
+    font-size: 4rem;
+    color: #03446F; /* Lully Navy */
+}
+
+.pulse-icon {
+    font-size: 2rem;
+    margin-top: 15px;
 }
 
 .status-tag.online { color: var(--safe-green); }

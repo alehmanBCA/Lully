@@ -604,6 +604,116 @@ body.dashboard-page {
     font-size: 13px;
 }
 
+/* Analytics / Admin dashboard styles */
+.analytics-section {
+    max-width: 980px;
+    margin: 28px auto;
+    padding: 24px;
+}
+
+.analytics-section h1 {
+    margin: 0 0 8px;
+    color: #0b4a66;
+    font-size: 32px;
+}
+
+.analytics-section p.lead {
+    color: #516372;
+    margin: 0 0 18px;
+}
+
+.metrics-grid {
+    display: flex;
+    gap: 18px;
+    align-items: stretch;
+    margin-top: 18px;
+    flex-wrap: wrap;
+}
+
+.metric-card {
+    flex: 1 1 240px;
+    min-width: 200px;
+    background: linear-gradient(180deg, #fff, #fbfdff);
+    padding: 18px;
+    border-radius: 12px;
+    border: 1px solid rgba(18,62,103,0.06);
+    box-shadow: 0 8px 18px rgba(11,74,102,0.04);
+}
+
+.metric-label {
+    color: #3b5568;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.metric-value {
+    font-size: 34px;
+    font-weight: 800;
+    color: #0b4a66;
+    margin-top: 6px;
+}
+
+.metric-delta {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #516372;
+}
+
+.metric-delta.positive { color: #0b9b3f; }
+.metric-delta.negative { color: #c53030; }
+
+.analytics-body {
+    display: flex;
+    gap: 20px;
+    margin-top: 22px;
+    flex-wrap: wrap;
+}
+
+.stats-panel {
+    flex: 2 1 520px;
+    min-width: 300px;
+    background: #fff;
+    padding: 16px;
+    border-radius: 10px;
+    border: 1px solid rgba(11,74,102,0.04);
+}
+
+.actions-panel {
+    flex: 1 1 220px;
+    min-width: 220px;
+    background: #fff;
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(11,74,102,0.04);
+}
+
+.last7-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.last7-table thead th {
+    text-align: left;
+    padding: 10px 8px;
+    font-size: 13px;
+    color: #274358;
+    border-bottom: 1px solid #eef6fb;
+}
+
+.last7-table td {
+    padding: 10px 8px;
+    color: #445566;
+    border-bottom: 1px solid #fbfdff;
+}
+
+.actions-panel ul { padding-left: 18px; margin: 8px 0 0; }
+.actions-panel a { color: #186a9a; text-decoration: none; font-weight: 600; }
+
+@media (max-width: 720px) {
+    .metrics-grid { flex-direction: column; }
+    .analytics-body { flex-direction: column; }
+}
+
 @media (max-width: 980px) {
     .dashboard-shell {
         padding: 24px 12px 34px;
@@ -782,12 +892,7 @@ body.auth-page::before {
     transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
-.nav-button,
-.hero-primary,
-.hero-secondary,
-.cta-button,
-.auth-btn {
-}
+/* removed duplicate empty ruleset */
 
 .nav-link {
     color: #18486f;

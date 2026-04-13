@@ -32,6 +32,13 @@
             <input type="checkbox" name="is_active" {% if target.is_active %}checked{% endif %}> Active
           </label>
         </div>
+        {% if can_toggle_staff %}
+        <div class="form-row">
+          <label>
+            <input type="checkbox" name="is_staff" {% if target.is_staff %}checked{% endif %}> Staff (admin)
+          </label>
+        </div>
+        {% endif %}
 
         <div class="form-actions">
           <button class="btn primary" type="submit">Save</button>

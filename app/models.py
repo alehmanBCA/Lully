@@ -55,3 +55,25 @@ class DeviceStatus(models.Model):
     is_online = models.BooleanField(default=False)
     battery_level = models.IntegerField(default=100)
     last_seen = models.DateTimeField(auto_now=True)
+
+
+class DailyUserStat(models.Model):
+    """Daily snapshot of user metrics for analytics on the admin dashboard.
+
+    - date: the day the snapshot represents (date only)
+    - active_count: number of active users recorded for that day
+    - total_users: total number of user accounts on that day
+    - peak_active: the highest observed active users value for that day
+    """
+    date = models.DateField(unique=True)
+    active_count = models.IntegerField(default=0)
+    total_users = models.IntegerField(default=0)
+    peak_active = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-date']
+
+    def __str__(self):
+        return f"DailyUserStat({self.date}: active={self.active_count}, total={self.total_users}, peak={self.peak_active})"

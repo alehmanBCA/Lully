@@ -5,12 +5,17 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Parent Profile — Lully</title>
+  {% load static %}
   <link rel="stylesheet" href="{% static 'css/profile.css' %}">
 </head>
 <body>
   <div class="app-shell">
     <header class="topbar">
       <div class="top-left">
+        <a href="{% url 'home' %}" class="home-btn" title="Home">
+          <span class="home-icon">🏠</span>
+          <span class="home-text">Home</span>
+        </a>
         <div class="logo-row">
           <div class="logo-mark">
             <img src="{% static 'images/Lully_logo.png' %}" alt="Lully Logo" class="logo-img">
@@ -83,7 +88,8 @@
           </form>
         </div>
       </div>
-
+      
+      <!-- Angel's stuff -->
       <section class="cards" id="babyCards">
         {% for baby in babies %}
         <article class="card">
@@ -117,6 +123,9 @@
         <p>No baby profiles found. Click "Add Baby Profile" to get started!</p>
         {% endif %}
       </section>
+      <!-- Angel's stuff -->
+
+      
 
       <section class="about">
         <div class="about-inner">
@@ -135,8 +144,6 @@
     </main>
   </div>
 
-  {% include 'chatbot.html' %}
   <script src="{% static 'js/profile.js' %}"></script>
-  <script src="{% static 'js/chatbot.js' %}" defer></script>
 </body>
 </html>

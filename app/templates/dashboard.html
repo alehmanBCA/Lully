@@ -19,6 +19,9 @@
         </span>
       </a>
       <div class="landing-actions">
+        {% if user.is_superuser %}
+          <a class='admin-link' href="{% url 'admin_dashboard' %}">Admin</a>
+        {% endif %}
         <a class="nav-link" href="{% url 'login' %}">Login</a>
         <a class="nav-button" href="{% url 'signup' %}">Get Started</a>
       </div>

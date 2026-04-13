@@ -20,6 +20,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.http import require_http_methods
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.http import require_POST
+from pathlib import Path
 
 # Create your views here.
 def home(request):
@@ -178,12 +179,21 @@ def profile(request):
             messages.success(request, f"Profile for {new_baby.name} created!")
             return redirect('profile')
 
+    # find any file matching username.* in the profile_pics folder (handles png/jpg/webp/etc.)
     profile_url = None
-    for ext in ('.png', '.jpg', '.jpeg', '.gif'):
-        p = settings.MEDIA_ROOT / 'profile_pics' / f"{user.username}{ext}"
-        if p.exists():
-            profile_url = settings.MEDIA_URL + f'profile_pics/{user.username}{ext}'
-            break
+    profile_dir = Path(settings.MEDIA_ROOT) / 'profile_pics'
+    try:
+        candidates = list(profile_dir.glob(f"{user.username}.*"))
+    except Exception:
+        candidates = []
+
+    if candidates:
+        p = candidates[0]
+        try:
+            mtime = int(p.stat().st_mtime)
+            profile_url = settings.MEDIA_URL + f'profile_pics/{p.name}?v={mtime}'
+        except Exception:
+            profile_url = settings.MEDIA_URL + f'profile_pics/{p.name}'
 
     name = user.first_name or user.get_username()
     
@@ -237,15 +247,29 @@ def account_edit(request):
             
         file = request.FILES.get('pfp')
         if file:
-            profile_dir = settings.MEDIA_ROOT / 'profile_pics'
-            os.makedirs(profile_dir, exist_ok=True)
+            profile_dir = Path(settings.MEDIA_ROOT) / 'profile_pics'
+            profile_dir.mkdir(parents=True, exist_ok=True)
+
+            # Determine extension: prefer file extension from name, else map from content_type
             _, ext = os.path.splitext(file.name)
             ext = ext.lower()
-            
-            for old_ext in ('.png', '.jpg', '.jpeg', '.gif'):
-                old_path = profile_dir / f"{user.username}{old_ext}"
-                if old_path.exists():
+            if not ext:
+                content_type = getattr(file, 'content_type', '')
+                ct_map = {
+                    'image/jpeg': '.jpg',
+                    'image/jpg': '.jpg',
+                    'image/png': '.png',
+                    'image/gif': '.gif',
+                    'image/webp': '.webp'
+                }
+                ext = ct_map.get(content_type, '.png')
+
+            # Remove any existing profile images for this user (username.*)
+            for old_path in profile_dir.glob(f"{user.username}.*"):
+                try:
                     old_path.unlink()
+                except Exception:
+                    pass
 
             filepath = profile_dir / f"{user.username}{ext}"
             with open(filepath, 'wb+') as dest:

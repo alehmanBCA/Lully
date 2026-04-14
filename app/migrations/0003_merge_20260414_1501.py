@@ -6,7 +6,12 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('app', '0002_alter_baby_id_alter_devicestatus_id_and_more'),
+        # The merge commit referenced two different '0002' migrations from
+        # separate branches. The other migration file wasn't present in this
+        # checkout, which caused Django's migration graph to be inconsistent
+        # (NodeNotFoundError). Depend only on the existing migration so the
+        # graph is valid. If you later bring in the missing migration file,
+        # we can revisit merging them properly.
         ('app', '0002_dailyuserstat'),
     ]
 

@@ -12,7 +12,10 @@
   <div class="app-shell">
     <header class="topbar">
       <div class="top-left">
-        <!-- removed house icon per request -->
+        <a href="{% url 'home' %}" class="home-btn" title="Home">
+          <span class="home-icon">🏠</span>
+          <span class="home-text">Home</span>
+        </a>
         <div class="logo-row">
           <div class="logo-mark">
             <img src="{% static 'images/Lully_logo.png' %}" alt="Lully Logo" class="logo-img">
@@ -141,6 +144,8 @@
     </main>
   </div>
 
+  {% include 'chatbot.html' %}
   <script src="{% static 'js/profile.js' %}"></script>
+  <script src="{% static 'js/chatbot.js' %}" defer></script>
 </body>
 </html>

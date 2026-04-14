@@ -61,6 +61,29 @@ body::before {
   gap: 18px;
 }
 
+.home-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.78));
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.65);
+  box-shadow: 0 8px 20px rgba(12,46,73,0.06);
+  color: #0b5f88;
+  font-weight: 700;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.home-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(12,46,73,0.10);
+}
+
+.home-icon { font-size: 16px; }
+.home-text { font-size: 14px; }
+
 .home-icon {
   font-size: 18px;
   margin-right: 6px;
@@ -622,6 +645,259 @@ body.account-edit-page::before {
 
   .cards {
     grid-template-columns: 1fr;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.lully-chatbot {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+}
+
+.lully-chatbot-launch {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  width: 72px;
+  height: 72px;
+  border: 0;
+  border-radius: 50%;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.76));
+  box-shadow: 0 18px 40px rgba(12, 46, 73, 0.16);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.lully-chatbot-launch:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 24px 48px rgba(12, 46, 73, 0.2);
+}
+
+.lully-chatbot-launch-logo {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+}
+
+.lully-chatbot-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 22, 35, 0.22);
+  backdrop-filter: blur(3px);
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+.lully-chatbot-panel {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  width: min(400px, calc(100vw - 32px));
+  height: min(640px, calc(100vh - 48px));
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.86), rgba(255,255,255,0.7));
+  border: 1px solid rgba(255,255,255,0.6);
+  box-shadow: 0 26px 64px rgba(12, 46, 73, 0.18);
+  backdrop-filter: blur(18px);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 16px;
+  padding: 18px;
+  transform: translateX(calc(100% + 40px));
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), opacity 220ms ease;
+}
+
+.lully-chatbot.is-open .lully-chatbot-overlay {
+  opacity: 1;
+}
+
+.lully-chatbot.is-open .lully-chatbot-panel {
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.lully-chatbot-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lully-chatbot-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.lully-chatbot-brand-logo {
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
+  border-radius: 18px;
+  box-shadow: 0 10px 22px rgba(12, 46, 73, 0.12);
+}
+
+.lully-chatbot-brand strong {
+  display: block;
+  font-size: 18px;
+  color: #123e67;
+}
+
+.lully-chatbot-brand small {
+  display: block;
+  color: #5f7387;
+  font-size: 12px;
+}
+
+.lully-chatbot-close {
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  background: rgba(255,255,255,0.82);
+  color: #123e67;
+  font-size: 24px;
+  line-height: 1;
+  box-shadow: 0 10px 22px rgba(12, 46, 73, 0.08);
+}
+
+.lully-chatbot-messages {
+  position: relative;
+  overflow: auto;
+  padding: 6px 6px 2px 0;
+  padding-right: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lully-chatbot-messages::before {
+  content: 'Lully is a bot and can make mistakes. Do not rely on Lully for medical advice.';
+  position: absolute;
+  inset: 16px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+  color: rgba(18, 62, 103, 0.16);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.lully-chatbot-message {
+  position: relative;
+  z-index: 1;
+  max-width: 86%;
+  padding: 12px 14px;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.lully-chatbot-message.user {
+  align-self: flex-end;
+  background: linear-gradient(135deg, #1f9bf0, #147fd1);
+  color: #fff;
+  border-bottom-right-radius: 6px;
+}
+
+.lully-chatbot-message.assistant {
+  align-self: flex-start;
+  background: rgba(255,255,255,0.82);
+  color: #173d5f;
+  border: 1px solid rgba(18, 62, 103, 0.08);
+  border-bottom-left-radius: 6px;
+}
+
+.lully-chatbot-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+}
+
+.lully-chatbot-input {
+  border: 1px solid rgba(21,71,112,0.14);
+  border-radius: 16px;
+  padding: 14px 16px;
+  font: inherit;
+  color: #123e67;
+  background: rgba(255,255,255,0.92);
+}
+
+.lully-chatbot-input:focus {
+  outline: none;
+  border-color: #1f9bf0;
+  box-shadow: 0 0 0 4px rgba(31,155,240,0.12);
+}
+
+.lully-chatbot-send {
+  border: 0;
+  border-radius: 16px;
+  padding: 0 18px;
+  background: linear-gradient(135deg, #1f9bf0, #1a85d8);
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.lully-chatbot-send:hover,
+.lully-chatbot-send:focus-visible {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 720px) {
+  .lully-chatbot-launch {
+    right: 18px;
+    bottom: 18px;
+    width: 64px;
+    height: 64px;
+  }
+
+  .lully-chatbot-launch-logo {
+    width: 46px;
+    height: 46px;
+  }
+
+  .lully-chatbot-panel {
+    top: auto;
+    bottom: 12px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+    height: min(76vh, 680px);
+  }
+
+  .lully-chatbot-messages::before {
+    font-size: 11px;
+    inset: 12px 4px;
   }
 }
 

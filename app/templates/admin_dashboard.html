@@ -1,0 +1,88 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Dashboard — Lully</title>
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+</head>
+<body class="dashboard-page">
+  <main class="dashboard-shell">
+    <header class="landing-nav">
+      <a class="brand-mark" href="{% url 'home' %}">
+        <img src="{% static 'images/logo.png' %}" alt="Lully logo" class="brand-logo">
+        <span class="brand-copy"><strong>Lully</strong></span>
+      </a>
+      <div class="landing-actions">
+        <a class="nav-link" href="{% url 'profile' %}">Profile</a>
+      </div>
+    </header>
+
+    <section class="analytics-section">
+      <h1>Admin Analytics</h1>
+      <p class="lead">Overview of site user activity and account growth. Values are updated from daily snapshots; "active" counts are based on the <code>is_active</code> flag by default.</p>
+
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-label">Active users (now)</div>
+          <div class="metric-value">{{ active_now }}</div>
+          {% if active_change is not None %}
+            <div class="metric-delta {% if active_change > 0 %}positive{% elif active_change < 0 %}negative{% endif %}">Day change: {{ active_change }}%</div>
+          {% endif %}
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Total accounts</div>
+          <div class="metric-value">{{ total_users }}</div>
+          {% if total_change is not None %}
+            <div class="metric-delta {% if total_change > 0 %}positive{% elif total_change < 0 %}negative{% endif %}">Day change: {{ total_change }}%</div>
+          {% endif %}
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Peak active (historical)</div>
+          <div class="metric-value">{{ global_peak }}</div>
+          <div class="metric-delta">Today's peak: {{ today_stat.peak_active }}</div>
+        </div>
+      </div>
+
+      <div class="analytics-body">
+        <div class="stats-panel">
+          <h3 style="margin-top:0">Last 7 days</h3>
+          {% if last_7 %}
+            <table class="last7-table">
+              <thead>
+                <tr><th>Date</th><th>Active</th><th>Total</th><th>Peak</th></tr>
+              </thead>
+              <tbody>
+                {% for s in last_7 %}
+                  <tr>
+                    <td>{{ s.date }}</td>
+                    <td>{{ s.active_count }}</td>
+                    <td>{{ s.total_users }}</td>
+                    <td>{{ s.peak_active }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% else %}
+            <p>No historical snapshots yet. A snapshot for today has been created.</p>
+          {% endif %}
+        </div>
+
+        <div class="actions-panel">
+          <h3 style="margin-top:0">Actions</h3>
+          <ul>
+            <li><a href="{% url 'admin_users' %}">Manage Users</a></li>
+            <li><a href="{% url 'home' %}">Back to Home</a></li>
+            <li><a href="{% url 'profile' %}">View Profile</a></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <footer class="page-footer">© 2026 Lully</footer>
+  </main>
+</body>
+</html>

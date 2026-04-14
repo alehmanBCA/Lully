@@ -29,7 +29,6 @@ function randomWalkFloat(current, step) {
 }
 
 app.get('/api/hr', (req, res) => {
-    // Accept baby id to generate per-baby vitals: ?baby=1
     const babyId = String(req.query.baby || '0');
     const force = (req.query.force || '').toLowerCase();
 

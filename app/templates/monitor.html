@@ -35,11 +35,6 @@
     </div>
 
     <script>
-        // These constants tell app.js where to find your Node.js mock server
-        // Prefer the Django backend endpoint so UI and server-side
-        // notifications stay in sync. The Node mock server can still be
-        // used for local testing by setting HR_API_URL/TEMP_API_URL to the
-        // mock endpoints, but by default we point to the Django view.
         const CURRENT_BABY_ID = {{ baby.id }};
         const HR_API_URL = `/api/baby/${CURRENT_BABY_ID}/vitals/`;
         const TEMP_API_URL = `/api/baby/${CURRENT_BABY_ID}/vitals/`;

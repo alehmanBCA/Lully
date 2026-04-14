@@ -1,3 +1,4 @@
+import requests
 from django.shortcuts import render
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login as auth_login
@@ -50,25 +51,6 @@ def profile(request):
         'babies': babies,
         'form': form
     })
-
-
-# def profile(request):
-#     user = request.user
-#     profile_url = None
-#     if user.is_authenticated:
-#         # try to find an uploaded profile picture for this user
-#         from django.conf import settings
-#         for ext in ('.png', '.jpg', '.jpeg', '.gif'):
-#             p = settings.MEDIA_ROOT / 'profile_pics' / f"{user.username}{ext}"
-#             if p.exists():
-#                 profile_url = settings.MEDIA_URL + f'profile_pics/{user.username}{ext}'
-#                 break
-
-#     name = ''
-#     if user.is_authenticated:
-#         name = user.first_name or user.get_username()
-
-#     return render(request, 'profile.html', {'profile_url': profile_url, 'name': name})
 
 @login_required
 def delete_baby(request, baby_id):
@@ -167,18 +149,51 @@ def monitor_dashboard(request, baby_id):
         'device': device
     })
 
+# def api_latest_vitals(request, baby_id):
+#     baby = get_object_or_404(Baby, id=baby_id)
+#     latest = baby.readings.order_by('-timestamp').first()
+    
+#     return JsonResponse({
+#         "heart_rate": latest.heart_rate if latest else None,
+#         "oxygen": latest.oxygen_level if latest else None,
+#         "max_heart_rate": baby.max_heart_rate,
+#         "min_heart_rate": baby.min_heart_rate,
+#         "min_oxygen_level": baby.min_oxygen_level,
+#         "status": latest.sleep_status if latest else "Unknown"
+#     })
 def api_latest_vitals(request, baby_id):
     baby = get_object_or_404(Baby, id=baby_id)
-    latest = baby.readings.order_by('-timestamp').first()
     
-    return JsonResponse({
-        "heart_rate": latest.heart_rate if latest else None,
-        "oxygen": latest.oxygen_level if latest else None,
-        "max_heart_rate": baby.max_heart_rate,
-        "min_heart_rate": baby.min_heart_rate,
-        "min_oxygen_level": baby.min_oxygen_level,
-        "status": latest.sleep_status if latest else "Unknown"
-    })
+    try:
+        hr_response = requests.get("http://127.0.0.1:3000/api/hr", timeout=1).json()
+        temp_response = requests.get("http://127.0.0.1:3000/api/temperature", timeout=1).json()
+        
+        hr = hr_response.get('heartRate')
+        temp = temp_response.get('temperatureF')
+
+        HealthReading.objects.create(
+            baby=baby,
+            heart_rate=hr,
+            baby_temperature=temp,
+            oxygen_level=98 # Placeholder
+        )
+
+        return JsonResponse({
+            "heart_rate": hr,
+            "temperature": float(temp),
+            "status": "Online"
+        })
+
+    except Exception as e:
+        latest = baby.readings.order_by('-timestamp').first()
+        return JsonResponse({
+            "heart_rate": latest.heart_rate if latest else "--",
+            "temperature": float(latest.baby_temperature) if latest else "--",
+            "status": "Offline (Using Last Known)",
+            "error": str(e)
+        })
+
+
 
 def baby_history_api(request, baby_id):
     baby = get_object_or_404(Baby, id=baby_id)

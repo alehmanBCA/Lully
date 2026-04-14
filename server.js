@@ -1,9 +1,9 @@
 const express = require('express');
-const cors = require('cors'); // Import CORS
+const cors = require('cors');
 const { exec } = require('child_process');
 const app = express();
 
-app.use(cors()); // Enable CORS globally
+app.use(cors());
 app.use(express.static('templates'));
 app.use('/src', express.static('src'));
 
@@ -14,7 +14,7 @@ app.get('/api/hr', (req, res) => {
     const base = 110;
     const variability = Math.round((Math.random() - 0.5) * 20);
     const hr = Math.max(50, base + variability);
-    res.json({ heartRate: hr }); // Headers are now handled automatically
+    res.json({ heartRate: hr });
     // res.set('Access-Control-Allow-Origin', '*');
     // res.json({ heartRate: hr });
 });

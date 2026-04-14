@@ -92,7 +92,7 @@
       <!-- Angel's stuff -->
       <section class="cards" id="babyCards">
         {% for baby in babies %}
-        <article class="card">
+  <article class="card" data-baby-id="{{ baby.id }}">
           <a href="{% url 'monitor_dashboard' baby.id %}" style="text-decoration: none; color: inherit;">
             <div class="card-header">
               <div class="avatar avatar-blue">{{ baby.name|slice:":1" }}</div>
@@ -146,6 +146,6 @@
 
   {% include 'chatbot.html' %}
   <script src="{% static 'js/profile.js' %}"></script>
-  <script src="{% static 'js/chatbot.js' %}"> defer</script>
+  <script src="{% static 'js/chatbot.js' %}" defer></script>
 </body>
 </html>

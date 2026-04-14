@@ -211,6 +211,6 @@ async function fetchVitals() {
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("Live monitoring started via Django Proxy...");
-    fetchVitals(); // Initial load
-    setInterval(fetchVitals, 2000); // Refresh every 2 seconds
+    fetchVitals();
+    setInterval(fetchVitals, 2000);
 });

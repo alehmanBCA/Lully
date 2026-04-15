@@ -190,3 +190,8 @@ body {
     font-size: 12px;
     color: #88A9C0;
 }
+
+
+canvas {
+    max-height: 250px;
+}

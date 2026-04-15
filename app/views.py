@@ -17,6 +17,7 @@ from .models import Baby, HealthReading, DeviceStatus, DailyUserStat
 from .forms import BabyForm
 from django.core.paginator import Paginator
 from notifypy import Notify
+# from notifications.signals import notify
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.http import require_http_methods
 from django.contrib.admin.views.decorators import staff_member_required
@@ -319,18 +320,7 @@ def monitor_dashboard(request, baby_id):
         'device': device
     })
 
-# def api_latest_vitals(request, baby_id):
-#     baby = get_object_or_404(Baby, id=baby_id)
-#     latest = baby.readings.order_by('-timestamp').first()
-    
-#     return JsonResponse({
-#         "heart_rate": latest.heart_rate if latest else None,
-#         "oxygen": latest.oxygen_level if latest else None,
-#         "max_heart_rate": baby.max_heart_rate,
-#         "min_heart_rate": baby.min_heart_rate,
-#         "min_oxygen_level": baby.min_oxygen_level,
-#         "status": latest.sleep_status if latest else "Unknown"
-#     })
+
 def api_latest_vitals(request, baby_id):
     baby = get_object_or_404(Baby, id=baby_id)
     
@@ -372,10 +362,8 @@ def baby_history_api(request, baby_id):
     data = []
     for r in readings:
         data.append({
-            "timestamp": r.timestamp.strftime('%H:%M:%S'),
             "heart_rate": r.heart_rate,
-            "oxygen": r.oxygen_level
+            "temperature": float(r.baby_temperature), 
+            "timestamp": r.timestamp.strftime("%H:%M:%S")
         })
-    
-
     return JsonResponse(data, safe=False)

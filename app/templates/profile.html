@@ -5,49 +5,17 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Parent Profile — Lully</title>
-  {% load static %}
   <link rel="stylesheet" href="{% static 'css/profile.css' %}">
 </head>
 <body>
+  {% include 'nav/site_nav.html' %}
   <div class="app-shell">
-    <header class="topbar">
-      <div class="top-left">
-        <a href="{% url 'home' %}" class="home-btn" title="Home">
-          <span class="home-icon">🏠</span>
-          <span class="home-text">Home</span>
-        </a>
-        <div class="logo-row">
-          <div class="logo-mark">
-            <img src="{% static 'images/Lully_logo.png' %}" alt="Lully Logo" class="logo-img">
-          </div>
-          <div class="title-block">
-            <h1>Parent Profile</h1>
-            <p class="subtitle">Manage your babies' monitoring</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="top-right">
-        <a href="{% url 'account_edit' %}" class="account-box" title="Edit account">
-          {% if profile_url %}
-            <img src="{{ profile_url }}" alt="profile" class="account-pfp" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
-          {% else %}
-            <div class="account-icon">👤</div>
-          {% endif %}
-          <div class="account-text">
-            <div class="acc-name">{{ name|default:'Parent Account' }}</div>
-            <div class="acc-sub">Logged in</div>
-          </div>
-        </a>
-      </div>
-    </header>
-
     <main class="content">
       <!-- Angel's Stuff -->
        <!-- <div class="controls">
         <button class="btn add" onclick="toggleModal(true)">+ Add Baby Profile</button>
       </div> -->
-      <div class="controls" style="margin-bottom: 30px;">
+      <div class="controls controls-spaced">
         <button class="btn add" onclick="toggleModal(true)">
           <span>+</span> Add Baby Profile
         </button>
@@ -63,7 +31,7 @@
           <form method="POST" action="{% url 'profile' %}" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="form-group">
-              <label>Baby's Name</label>
+              <label>Name</label>
               <input type="text" name="name" required placeholder="Enter name">
             </div>
             <div class="form-group">

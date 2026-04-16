@@ -1,7 +1,7 @@
 import requests
 from django.shortcuts import render
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.models import User
 from django.db.models import Max
 from datetime import date, timedelta
@@ -20,7 +20,7 @@ from .models import SleepSession, Baby, HealthReading, DeviceStatus, DailyUserSt
 
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
-from .models import Baby, HealthReading, DeviceStatus, DailyUserStat
+from .models import Baby, HealthReading, DeviceStatus, DailyUserStat, UserPreference
 from .forms import BabyForm
 from django.core.paginator import Paginator
 from notifypy import Notify
@@ -197,6 +197,13 @@ def profile(request):
         if form.is_valid():
             new_baby = form.save(commit=False)
             new_baby.parent = user
+
+            preference = UserPreference.objects.filter(user=user).first()
+            if preference:
+                new_baby.min_heart_rate = preference.default_min_heart_rate
+                new_baby.max_heart_rate = preference.default_max_heart_rate
+                new_baby.min_oxygen_level = preference.default_min_oxygen_level
+
             new_baby.save()
             messages.success(request, f"Profile for {new_baby.name} created!")
             return redirect('profile')
@@ -243,6 +250,8 @@ def delete_baby(request, baby_id):
 @login_required
 def account_edit(request):
     user = request.user
+    preference, _ = UserPreference.objects.get_or_create(user=user)
+
     if request.method == 'POST':
         name = request.POST.get('name', '').strip()
         if name:
@@ -279,9 +288,36 @@ def account_edit(request):
                 for chunk in file.chunks():
                     dest.write(chunk)
 
+        min_hr_raw = request.POST.get('default_min_heart_rate', '').strip()
+        max_hr_raw = request.POST.get('default_max_heart_rate', '').strip()
+        min_oxygen_raw = request.POST.get('default_min_oxygen_level', '').strip()
+
+        try:
+            min_hr = int(min_hr_raw)
+            max_hr = int(max_hr_raw)
+            min_oxygen = int(min_oxygen_raw)
+            if min_hr > 0:
+                preference.default_min_heart_rate = min_hr
+            if max_hr > 0:
+                preference.default_max_heart_rate = max_hr
+            if min_oxygen > 0:
+                preference.default_min_oxygen_level = min_oxygen
+        except (TypeError, ValueError):
+            pass
+
+        temperature_unit = request.POST.get('temperature_unit', preference.temperature_unit)
+        if temperature_unit in {'c', 'f'}:
+            preference.temperature_unit = temperature_unit
+
+        weight_unit = request.POST.get('weight_unit', preference.weight_unit)
+        if weight_unit in {'kg', 'lb'}:
+            preference.weight_unit = weight_unit
+
+        preference.save()
+
         user.save()
         messages.success(request, 'Account updated')
-        return redirect('profile')
+        return redirect('account_edit')
 
     profile_url = None
     for ext in ('.png', '.jpg', '.jpeg', '.gif'):
@@ -294,7 +330,11 @@ def account_edit(request):
                 profile_url = settings.MEDIA_URL + f'profile_pics/{user.username}{ext}'
             break
 
-    return render(request, 'account_edit.html', {'profile_url': profile_url, 'name': user.first_name})
+    return render(request, 'account_edit.html', {
+        'profile_url': profile_url,
+        'name': user.first_name,
+        'preference': preference,
+    })
 
 
 def signup(request):
@@ -323,6 +363,11 @@ def login_view(request):
         else:
             messages.error(request, 'Invalid credentials')
     return render(request, 'login.html')
+
+
+def logout_view(request):
+    auth_logout(request)
+    return redirect('home')
 
 
 

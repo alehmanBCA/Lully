@@ -8,18 +8,11 @@
   <link rel="stylesheet" href="{% static 'css/profile.css' %}">
 </head>
 <body class="account-edit-page">
+  {% include 'nav/site_nav.html' %}
   <div class="edit-shell">
     <header class="topbar">
       <div class="top-left">
-        <div class="logo-row">
-          <div class="logo-mark">
-            <img src="{% static 'images/Lully_logo.png' %}" alt="Lully Logo" class="logo-img">
-          </div>
-          <div class="title-block">
-            <h1>Edit Account</h1>
-            <p class="subtitle">Update your display name and profile picture</p>
-          </div>
-        </div>
+
       </div>
     </header>
 
@@ -33,20 +26,64 @@
             <input id="name" name="name" type="text" value="{{ name }}">
           </div>
 
-          <div class="form-row">
-            <label for="pfp">Profile picture</label>
-            {% if profile_url %}
-              <div class="current-pfp">
-                <img src="{{ profile_url }}" alt="current pfp" width="80" height="80" style="border-radius:50%; object-fit:cover;">
-              </div>
-            {% endif %}
-            <input id="pfp" name="pfp" type="file" accept="image/*">
-          </div>
 
-          <div class="form-actions">
-            <button type="submit" class="btn">Save</button>
-            <a href="{% url 'profile' %}" class="btn btn-link">Cancel</a>
-          </div>
+          <section class="settings-panel">
+            <h2>General Settings</h2>
+            <p class="settings-intro">Manage how alerts work and your account preferences.</p>
+
+            <div class="settings-stack">
+              <article class="setting-card">
+                <h3>Alert Thresholds</h3>
+                <p class="setting-description">Set your default thresholds for new baby profiles.</p>
+
+                <div class="settings-input-grid">
+                  <div class="form-row">
+                    <label class="field-label" for="default_min_heart_rate">Min heart rate</label>
+                    <input id="default_min_heart_rate" name="default_min_heart_rate" type="number" min="1" value="{{ preference.default_min_heart_rate }}" class="settings-input">
+                  </div>
+
+                  <div class="form-row">
+                    <label class="field-label" for="default_max_heart_rate">Max heart rate</label>
+                    <input id="default_max_heart_rate" name="default_max_heart_rate" type="number" min="1" value="{{ preference.default_max_heart_rate }}" class="settings-input">
+                  </div>
+
+                  <div class="form-row">
+                    <label class="field-label" for="default_min_oxygen_level">Min oxygen level</label>
+                    <input id="default_min_oxygen_level" name="default_min_oxygen_level" type="number" min="1" max="100" value="{{ preference.default_min_oxygen_level }}" class="settings-input">
+                  </div>
+                </div>
+              </article>
+
+              <article class="setting-card">
+                <h3>Units</h3>
+                <p class="setting-description">Choose your preferred units for temperature and weight.</p>
+
+                <div class="settings-input-grid">
+                  <div class="form-row">
+                    <label class="field-label" for="temperature_unit">Temperature unit</label>
+                    <select id="temperature_unit" name="temperature_unit" class="settings-select">
+                      <option value="c" {% if preference.temperature_unit == 'c' %}selected{% endif %}>Celsius (°C)</option>
+                      <option value="f" {% if preference.temperature_unit == 'f' %}selected{% endif %}>Fahrenheit (°F)</option>
+                    </select>
+                  </div>
+
+                  <div class="form-row">
+                    <label class="field-label" for="weight_unit">Weight unit</label>
+                    <select id="weight_unit" name="weight_unit" class="settings-select">
+                      <option value="kg" {% if preference.weight_unit == 'kg' %}selected{% endif %}>Kilograms (kg)</option>
+                      <option value="lb" {% if preference.weight_unit == 'lb' %}selected{% endif %}>Pounds (lb)</option>
+                    </select>
+                  </div>
+                </div>
+              </article>
+
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn">Save</button>
+              <a href="{% url 'profile' %}" class="btn btn-link">Cancel</a>
+            </div>
+          </section>
         </form>
       </section>
     </main>

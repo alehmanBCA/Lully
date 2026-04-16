@@ -140,6 +140,7 @@ async function updateVitals() {
     
     const hrElement = document.getElementById('live-hr');
     const tempElement = document.getElementById('live-temp');
+    const tempElement = document.getElementById('live-temp');
     
     try {
         const hrResponse = await fetch(HR_API_URL);
@@ -192,6 +193,8 @@ async function fetchVitals() {
     const hrElement = document.getElementById("live-hr");
     const tempElement = document.getElementById("live-temp");
 
+    // Otherwise, try to fetch the separate mock endpoints (HR and Temp).
+    // Heart rate
     try {
         const res = await fetch(VITALS_API_URL);
         const data = await res.json();

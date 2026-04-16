@@ -5,6 +5,7 @@ from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.models import User
 from django.db.models import Max
 from datetime import date, timedelta
+import time
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
@@ -24,12 +25,25 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.http import require_POST
 from pathlib import Path
 
+# Notification configuration: simple temp bounds. Set ALERT_COOLDOWN_SEC to 0
+# to allow sending multiple notifications concurrently (no per-type cooldown).
+# We keep this in-memory to avoid adding DB migrations; it's sufficient
+# for a single-server/dev environment. If you want persistent throttling
+# across restarts or multiple processes, add fields to a model (e.g.
+# DeviceStatus) and persist the last alert timestamps there.
+ALERT_COOLDOWN_SEC = 0
+TEMP_HIGH_F = 100.4
+TEMP_LOW_F = 95.0
+# last_alerts maps baby_id -> {'hr': last_ts, 'temp': last_ts}
+last_alerts = {}
+# last_alert_state maps baby_id -> {'hr': bool, 'temp': bool}
+last_alert_state = {}
+
 # Create your views here.
 def home(request):
-    notification = Notify()
-    notification.title = "Cool Title"
-    notification.message = "Even cooler message."
-    notification.send()
+    # Previously this sent a demo desktop notification on page load.
+    # Remove that behavior — notifications are now sent when vitals are
+    # detected as unhealthy in `api_latest_vitals`.
     return render(request, 'dashboard.html')
 
 def admin_dashboard(request):

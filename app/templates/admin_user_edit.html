@@ -3,14 +3,31 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Edit User</title>
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <style>
-        .edit-card { max-width:640px; margin:28px auto; background:#fff; padding:24px; border-radius:12px; box-shadow:0 8px 24px rgba(6,41,70,0.06); }
-        .form-row { margin-bottom:12px; }
-        label { display:block; font-weight:700; margin-bottom:6px; color:#0b4a66 }
-        input[type="text"], input[type="email"] { width:100%; padding:10px 12px; border-radius:8px; border:1px solid #d8eaf6 }
-        .form-actions { display:flex; gap:12px; margin-top:14px }
+    /* Card and form layout */
+    .edit-card { max-width:640px; margin:28px auto; background:#fff; padding:24px; border-radius:12px; box-shadow:0 8px 24px rgba(6,41,70,0.06); }
+    .form-row { margin-bottom:12px; }
+    label { display:block; font-weight:700; margin-bottom:6px; color:#0b4a66 }
+    input[type="text"], input[type="email"] { width:100%; padding:12px 14px; border-radius:10px; border:1px solid #d8eaf6; font-size:16px }
+    .form-actions { display:flex; gap:12px; margin-top:18px }
+
+    /* Touch-friendly buttons */
+    .btn { display:inline-block; padding:10px 14px; border-radius:10px; text-decoration:none; text-align:center; cursor:pointer; }
+    .btn.primary { background:#0077cc; color:#fff; border:none }
+    .btn.ghost { background:transparent; color:#0077cc; border:1px solid rgba(0,119,204,0.12) }
+
+    /* Responsive: stack card to full-width on small screens */
+    @media (max-width: 520px) {
+      .edit-card { margin:18px; padding:18px; border-radius:12px; }
+      h2 { font-size:18px; margin-bottom:10px }
+      input[type="text"], input[type="email"] { font-size:18px; padding:12px }
+      .form-actions { flex-direction:column-reverse; align-items:stretch }
+      .form-actions .btn { width:100%; padding:14px; font-size:16px }
+      .form-row { margin-bottom:14px }
+    }
     </style>
 </head>
 <body class="dashboard-page">

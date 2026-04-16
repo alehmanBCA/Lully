@@ -8,6 +8,11 @@
 <body>
     <div class="monitor-container">
         <header class="monitor-header">
+            <a href="{% url 'profile' %}" class="exit-btn">
+                <span class="exit-icon">✕</span>
+                <span>Exit Monitor</span>
+            </a>
+            
             <div class="baby-meta">
                 <h1>{{ baby.name }}</h1>
                 <div class="status-pill">

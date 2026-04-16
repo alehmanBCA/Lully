@@ -23,7 +23,26 @@
                 </div>
                 <div class="pulse-icon">❤️</div>
             </div>
+        <div class="vitals-grid">
+            <div class="vital-card hr">
+                <h3>Heart Rate</h3>
+                <div class="value-row">
+                    <span id="live-hr" class="large-val">--</span>
+                    <span class="unit">BPM</span>
+                </div>
+                <div class="pulse-icon">❤️</div>
+            </div>
 
+            <div class="vital-card temp">
+                <h3>Temperature</h3>
+                <div class="value-row">
+                    <span id="live-temp" class="large-val">--</span>
+                    <span class="unit">°F</span>
+                </div>
+                <div class="pulse-icon">🌡️</div>
+            </div>
+        </div>
+    </div>
             <div class="vital-card temp">
                 <h3>Temperature</h3>
                 <div class="value-row">
@@ -36,9 +55,9 @@
     </div>
 
     <script>
-        // These constants tell app.js where to find your Node.js mock server
-        const HR_API_URL = "http://127.0.0.1:3000/api/hr";
-        const TEMP_API_URL = "http://127.0.0.1:3000/api/temperature";
+        const CURRENT_BABY_ID = {{ baby.id }};
+        const HR_API_URL = `/api/baby/${CURRENT_BABY_ID}/vitals/`;
+        const TEMP_API_URL = `/api/baby/${CURRENT_BABY_ID}/vitals/`;
     </script>
     <script src="{% static 'js/app.js' %}"></script>
 </body>

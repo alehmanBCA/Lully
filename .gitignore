@@ -8,8 +8,9 @@ __pycache__/
 venv/
 env/
 
-# Django local database and media cache
-/db.sqlite3
+# Django local database
+db.sqlite3
+db.sqlite3.backup*
 
 # Environment files
 .env
@@ -25,3 +26,6 @@ env/
 .mypy_cache/
 .coverage
 htmlcov/
+
+# Node
+node_modules/

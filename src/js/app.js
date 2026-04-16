@@ -1,7 +1,9 @@
 let hrChart = null;
 
 function canRunMonitorScripts() {
-    return typeof HR_API_URL !== 'undefined' && typeof TEMP_API_URL !== 'undefined';
+    // Allow either the mock server URLs to be defined, or the Django
+    // CURRENT_BABY_ID to be present so we can call the backend vitals API.
+    return (typeof HR_API_URL !== 'undefined' && typeof TEMP_API_URL !== 'undefined') || typeof CURRENT_BABY_ID !== 'undefined';
 }
 
 function showAlert(currentHr) {
@@ -25,6 +27,29 @@ function pulseHeartRateElement() {
     void hrElement.offsetWidth;
     hrElement.classList.add('pulse-animation');
 }
+
+// async function updateVitals() {
+//     if (!canRunMonitorScripts()) return;
+    
+//     const hrElement = document.getElementById('live-hr');
+//     const spo2Element = document.getElementById('live-spo2');
+//     if (!hrElement || !spo2Element) return;
+//     pulseHeartRateElement();
+    
+//     try {
+//         const response = await fetch(`/api/baby/${CURRENT_BABY_ID}/vitals/`);
+//         const data = await response.json();
+        
+//         hrElement.textContent = data.heart_rate ?? '--';
+//         spo2Element.textContent = data.oxygen ?? data.oxygen_level ?? '--';
+
+//         if (data.heart_rate && data.heart_rate > (data.max_heart_rate || 160)) {
+//             showAlert(data.heart_rate);
+//         }
+//     } catch (error) {
+//         console.error('Error fetching vitals:', error);
+//     }
+// }
 
 // async function updateVitals() {
 //     if (!canRunMonitorScripts()) return;
@@ -143,28 +168,55 @@ async function fetchVitals() {
     const hrElement = document.getElementById("live-hr");
     const tempElement = document.getElementById("live-temp");
 
-    // Fetch Heart Rate
+    // If the front-end is pointed at the mock server, the responses are
+    // separate endpoints. If not, fall back to the Django backend which
+    // returns both values from `/api/baby/<id>/vitals/`.
+    if (typeof HR_API_URL !== 'undefined' && HR_API_URL === TEMP_API_URL) {
+        // Single combined endpoint (Django)
+        try {
+            const res = await fetch(HR_API_URL);
+            if (!res.ok) throw new Error(`vitals response ${res.status}`);
+            const data = await res.json();
+
+            if (hrElement) {
+                hrElement.textContent = data.heart_rate ?? '--';
+                if (typeof data.heart_rate === 'number') {
+                    hrElement.style.color = data.heart_rate > 150 ? "#ff6b6b" : "#03446F";
+                }
+            }
+            if (tempElement) {
+                tempElement.textContent = (typeof data.temperature === 'number') ? data.temperature.toFixed(1) : '--';
+            }
+        } catch (err) {
+            console.error('Vitals fetch failed:', err);
+            if (hrElement) hrElement.textContent = "--";
+            if (tempElement) tempElement.textContent = "--";
+        }
+        return;
+    }
+
+    // Otherwise, try to fetch the separate mock endpoints (HR and Temp).
+    // Heart rate
     try {
         const res = await fetch(HR_API_URL);
         const data = await res.json();
-        
-        if (hrElement && typeof data.heartRate === "number") {
-            hrElement.textContent = data.heartRate;
-            // Visual warning if HR is too high
-            hrElement.style.color = data.heartRate > 150 ? "#ff6b6b" : "#03446F";
+        if (hrElement) {
+            hrElement.textContent = data.heartRate ?? '--';
+            if (typeof data.heartRate === 'number') {
+                hrElement.style.color = data.heartRate > 150 ? "#ff6b6b" : "#03446F";
+            }
         }
     } catch (err) {
         console.error("HR fetch failed:", err);
         if (hrElement) hrElement.textContent = "--";
     }
 
-    // Fetch Temperature
+    // Temperature
     try {
         const res = await fetch(TEMP_API_URL);
         const data = await res.json();
-        
-        if (tempElement && typeof data.temperatureF === "number") {
-            tempElement.textContent = data.temperatureF.toFixed(1);
+        if (tempElement) {
+            tempElement.textContent = (typeof data.temperatureF === 'number') ? data.temperatureF.toFixed(1) : '--';
         }
     } catch (err) {
         console.error("Temp fetch failed:", err);
@@ -172,13 +224,9 @@ async function fetchVitals() {
     }
 }
 
-setInterval(() => {
-    fetchHeartRate();
-    fetchTemperature();
-}, 2000);
-
-fetchHeartRate();
-fetchTemperature();
+// Periodically refresh vitals using the unified fetch function.
+setInterval(fetchVitals, 2000);
+fetchVitals();
 
 
 document.addEventListener('DOMContentLoaded', () => {

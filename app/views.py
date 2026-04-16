@@ -1,9 +1,11 @@
+import requests
 from django.shortcuts import render
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.models import User
 from django.db.models import Max
 from datetime import date, timedelta
+import time
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
@@ -22,12 +24,25 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.http import require_POST
 from pathlib import Path
 
+# Notification configuration: simple temp bounds. Set ALERT_COOLDOWN_SEC to 0
+# to allow sending multiple notifications concurrently (no per-type cooldown).
+# We keep this in-memory to avoid adding DB migrations; it's sufficient
+# for a single-server/dev environment. If you want persistent throttling
+# across restarts or multiple processes, add fields to a model (e.g.
+# DeviceStatus) and persist the last alert timestamps there.
+ALERT_COOLDOWN_SEC = 0
+TEMP_HIGH_F = 100.4
+TEMP_LOW_F = 95.0
+# last_alerts maps baby_id -> {'hr': last_ts, 'temp': last_ts}
+last_alerts = {}
+# last_alert_state maps baby_id -> {'hr': bool, 'temp': bool}
+last_alert_state = {}
+
 # Create your views here.
 def home(request):
-    notification = Notify()
-    notification.title = "Cool Title"
-    notification.message = "Even cooler message."
-    notification.send()
+    # Previously this sent a demo desktop notification on page load.
+    # Remove that behavior — notifications are now sent when vitals are
+    # detected as unhealthy in `api_latest_vitals`.
     return render(request, 'dashboard.html')
 
 def admin_dashboard(request):
@@ -214,25 +229,6 @@ def profile(request):
         'form': form
     })
 
-
-# def profile(request):
-#     user = request.user
-#     profile_url = None
-#     if user.is_authenticated:
-#         # try to find an uploaded profile picture for this user
-#         from django.conf import settings
-#         for ext in ('.png', '.jpg', '.jpeg', '.gif'):
-#             p = settings.MEDIA_ROOT / 'profile_pics' / f"{user.username}{ext}"
-#             if p.exists():
-#                 profile_url = settings.MEDIA_URL + f'profile_pics/{user.username}{ext}'
-#                 break
-
-#     name = ''
-#     if user.is_authenticated:
-#         name = user.first_name or user.get_username()
-
-#     return render(request, 'profile.html', {'profile_url': profile_url, 'name': name})
-
 @login_required
 def delete_baby(request, baby_id):
     baby = get_object_or_404(Baby, id=baby_id, parent=request.user)
@@ -382,18 +378,114 @@ def monitor_dashboard(request, baby_id):
         'device': device
     })
 
+# def api_latest_vitals(request, baby_id):
+#     baby = get_object_or_404(Baby, id=baby_id)
+#     latest = baby.readings.order_by('-timestamp').first()
+    
+#     return JsonResponse({
+#         "heart_rate": latest.heart_rate if latest else None,
+#         "oxygen": latest.oxygen_level if latest else None,
+#         "max_heart_rate": baby.max_heart_rate,
+#         "min_heart_rate": baby.min_heart_rate,
+#         "min_oxygen_level": baby.min_oxygen_level,
+#         "status": latest.sleep_status if latest else "Unknown"
+#     })
 def api_latest_vitals(request, baby_id):
     baby = get_object_or_404(Baby, id=baby_id)
-    latest = baby.readings.order_by('-timestamp').first()
     
-    return JsonResponse({
-        "heart_rate": latest.heart_rate if latest else None,
-        "oxygen": latest.oxygen_level if latest else None,
-        "max_heart_rate": baby.max_heart_rate,
-        "min_heart_rate": baby.min_heart_rate,
-        "min_oxygen_level": baby.min_oxygen_level,
-        "status": latest.sleep_status if latest else "Unknown"
-    })
+    try:
+        # Request mock device API including baby id so mock server can
+        # produce per-baby vitals (useful in dev/testing).
+        hr_response = requests.get(f"http://127.0.0.1:3000/api/hr?baby={baby.id}", timeout=1).json()
+        temp_response = requests.get(f"http://127.0.0.1:3000/api/temperature?baby={baby.id}", timeout=1).json()
+        
+        hr = hr_response.get('heartRate')
+        temp = temp_response.get('temperatureF')
+
+        HealthReading.objects.create(
+            baby=baby,
+            heart_rate=hr,
+            baby_temperature=temp,
+            oxygen_level=98 # Placeholder
+        )
+
+        # Coerce numeric types where possible
+        try:
+            hr_val = int(hr) if hr is not None else None
+        except Exception:
+            hr_val = None
+
+        try:
+            temp_val = float(temp) if temp is not None else None
+        except Exception:
+            temp_val = None
+
+        # Notification on state transition (normal -> alert) to avoid spam.
+        now = time.time()
+        baby_alerts = last_alerts.setdefault(baby.id, {'hr': 0, 'temp': 0})
+        baby_state = last_alert_state.setdefault(baby.id, {'hr': False, 'temp': False})
+
+        # Heart rate alert logic: send notification when we transition
+        # from non-alert to alert. When value returns to normal, clear state
+        # (optionally send a recovery notification).
+        if hr_val is not None:
+            hr_alert = hr_val > (baby.max_heart_rate or 9999) or hr_val < (baby.min_heart_rate or 0)
+            if hr_alert and not baby_state.get('hr'):
+                # send alert now
+                # respect cooldown only if >0 and last sent recently
+                if ALERT_COOLDOWN_SEC <= 0 or now - baby_alerts.get('hr', 0) > ALERT_COOLDOWN_SEC:
+                    notification = Notify()
+                    notification.title = f"Vital alert — {baby.name}"
+                    if hr_val > (baby.max_heart_rate or 9999):
+                        notification.message = f"Heart rate high: {hr_val} BPM (limit {baby.max_heart_rate})"
+                    else:
+                        notification.message = f"Heart rate low: {hr_val} BPM (limit {baby.min_heart_rate})"
+                    try:
+                        notification.send()
+                        baby_alerts['hr'] = now
+                    except Exception:
+                        pass
+                    baby_state['hr'] = True
+            elif not hr_alert and baby_state.get('hr'):
+                # recovered
+                baby_state['hr'] = False
+
+        # Temperature alerts: similar transition logic
+        if temp_val is not None:
+            temp_alert = temp_val > TEMP_HIGH_F or temp_val < TEMP_LOW_F
+            if temp_alert and not baby_state.get('temp'):
+                if ALERT_COOLDOWN_SEC <= 0 or now - baby_alerts.get('temp', 0) > ALERT_COOLDOWN_SEC:
+                    notification = Notify()
+                    notification.title = f"Vital alert — {baby.name}"
+                    if temp_val > TEMP_HIGH_F:
+                        notification.message = f"High temperature: {temp_val:.1f}°F"
+                    else:
+                        notification.message = f"Low temperature: {temp_val:.1f}°F"
+                    try:
+                        notification.send()
+                        baby_alerts['temp'] = now
+                    except Exception:
+                        pass
+                    baby_state['temp'] = True
+            elif not temp_alert and baby_state.get('temp'):
+                baby_state['temp'] = False
+
+        return JsonResponse({
+            "heart_rate": hr,
+            "temperature": float(temp),
+            "status": "Online"
+        })
+
+    except Exception as e:
+        latest = baby.readings.order_by('-timestamp').first()
+        return JsonResponse({
+            "heart_rate": latest.heart_rate if latest else "--",
+            "temperature": float(latest.baby_temperature) if latest else "--",
+            "status": "Offline (Using Last Known)",
+            "error": str(e)
+        })
+
+
 
 def baby_history_api(request, baby_id):
     baby = get_object_or_404(Baby, id=baby_id)

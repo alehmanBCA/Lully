@@ -19,6 +19,29 @@ class Baby(models.Model):
     def __str__(self):
         return self.name
 
+
+class UserPreference(models.Model):
+    TEMPERATURE_UNIT_CHOICES = [
+        ('c', 'Celsius (°C)'),
+        ('f', 'Fahrenheit (°F)'),
+    ]
+
+    WEIGHT_UNIT_CHOICES = [
+        ('kg', 'Kilograms (kg)'),
+        ('lb', 'Pounds (lb)'),
+    ]
+
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    default_min_heart_rate = models.IntegerField(default=60)
+    default_max_heart_rate = models.IntegerField(default=160)
+    default_min_oxygen_level = models.IntegerField(default=90)
+    temperature_unit = models.CharField(max_length=1, choices=TEMPERATURE_UNIT_CHOICES, default='c')
+    weight_unit = models.CharField(max_length=2, choices=WEIGHT_UNIT_CHOICES, default='kg')
+    visible_metrics = models.JSONField(default=dict, blank=True)
+
+    def __str__(self):
+        return f"UserPreference({self.user_id})"
+
 class HealthReading(models.Model):
     baby = models.ForeignKey(Baby, on_delete=models.CASCADE, related_name='readings')
     

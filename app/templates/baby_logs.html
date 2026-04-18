@@ -1,0 +1,131 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ baby.name }}'s Logs</title>
+    <link rel="stylesheet" href="{% static 'css/baby_logs.css' %}">
+</head>
+<body>
+    <div class="main-container">
+        <div class="header-container">
+            <h1>{{ baby.name }}'s Daily Log</h1>
+            <a href="{% url 'home' %}">Back to Dashboard</a>
+        </div>
+
+        <div class="quick-actions" data-api-url="/api/quick-log/{{ baby.id }}/">
+            {% with api_url='/api/quick-log/'|add:baby.id|add:'/' %}
+                <button onclick="quickLog('feed', '{{ api_url }}')">
+                    <span class="btn-icon">🍼</span> Feed Now
+                </button>
+                <button onclick="quickLog('sleep', '{{ api_url }}')">
+                    <span class="btn-icon">😴</span> Start Sleep
+                </button>
+                <button onclick="quickLog('diaper', '{{ api_url }}')">
+                    <span class="btn-icon">🧷</span> Diaper
+                </button>
+            {% endwith %}
+        </div>
+
+        <div class="stats-banner-container">
+            <div class="stat-banner nap-banner">
+                <strong>😴 Next Nap Prediction:</strong><br>
+                {% if next_nap %}
+                    {{ next_nap|date:"h:i A" }}
+                {% else %}
+                    No sleep data yet
+                {% endif %}
+            </div>
+
+            <div class="stat-banner feed-banner">
+                <div style="margin-bottom: 5px;">
+                    <strong>🍼 Last side:</strong> 
+                    <span>{% if last_feed %}{{ last_feed.get_side_display }}{% else %}No data{% endif %}</span>
+                </div>
+                <div>
+                    <strong>⚖️ Weight:</strong> 
+                    <span>{{ baby.weight_kg|default:"--" }} kg ({{ percentile }}th percentile)</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="timeline" data-api-url="/api/baby/{{ baby.id }}/timeline/" style="position: relative; margin:20px 0; height:50px; background:#eee; border-radius:10px; overflow: hidden;"></div>
+
+        <!-- <div class="quick-actions" data-api-url="/api/quick-log/{{ baby.id }}/">
+            {% with api_url='/api/quick-log/'|add:baby.id|add:'/' %}
+                <button onclick="quickLog('feed', '{{ api_url }}')">🍼 Feed Now</button>
+                <button onclick="quickLog('sleep', '{{ api_url }}')">😴 Start Sleep</button>
+                <button onclick="quickLog('diaper', '{{ api_url }}')">🧷 Diaper</button>
+            {% endwith %}
+        </div> -->
+
+        <div class="log-grid">
+            <a href="#" class="log-card">
+                <div class="card-header">
+                    <span class="icon">😴</span>
+                    <h3>Sleep</h3>
+                </div>
+                <div class="card-stats">
+                    <div>Next Nap: <span>{{ next_nap|time:"g:i A"|default:"--" }}</span></div>
+                    <div>Status: <span>Awake</span></div>
+                </div>
+            </a>
+
+            <a href="#" class="log-card">
+                <div class="card-header">
+                    <span class="icon">🍼</span>
+                    <h3>Feeding</h3>
+                </div>
+                <div class="card-stats">
+                    <div>Last Side: <span>{{ last_feed.get_side_display|default:"--" }}</span></div>
+                    <div>Time: <span>{{ last_feed.time|time:"g:i A"|default:"--" }}</span></div>
+                </div>
+            </a>
+
+            <a href="#" class="log-card">
+                <div class="card-header">
+                    <span class="icon">🧷</span>
+                    <h3>Diaper</h3>
+                </div>
+                <div class="card-stats">
+                    <div>Last Change: <span>--</span></div>
+                    <div>Status: <span>--</span></div>
+                </div>
+            </a>
+
+            <a href="#" class="log-card">
+                <div class="card-header">
+                    <span class="icon">🌟</span>
+                    <h3>Growth</h3>
+                </div>
+                <div class="card-stats">
+                    <div>Weight: <span>{{ baby.weight_kg|default:"--" }} kg</span></div>
+                    <div>Percentile: <span>{{ percentile }}th</span></div>
+                </div>
+            </a>
+
+            <a href="#" class="log-card">
+                <div class="card-header">
+                    <span class="icon">📊</span>
+                    <h3>Reports</h3>
+                </div>
+                <div class="card-stats">
+                    <div>View Daily Summaries</div>
+                </div>
+            </a>
+            
+            <a href="#" class="log-card">
+                <div class="card-header">
+                    <span class="icon">🏥</span>
+                    <h3>Medical</h3>
+                </div>
+                <div class="card-stats">
+                    <div>Temp/Meds Tracker</div>
+                </div>
+            </a>
+        </div>
+    </div>
+    <script src="{% static 'js/baby_logs.js' %}" defer></script>
+</body>
+</html>

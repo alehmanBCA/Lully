@@ -54,7 +54,7 @@ app.get('/api/hr', (req, res) => {
     }
 
     hrState[babyId] = currentHr;
-    res.json({ heartRate: currentHr });
+res.json({ heartRate: currentHr });
 });
 
 app.get('/api/temperature', (req, res) => {
@@ -83,7 +83,7 @@ app.get('/api/temperature', (req, res) => {
     }
 
     tempState[babyId] = currentTemp;
-    res.json({ temperatureF: currentTemp });
+res.json({ temperatureF: currentTemp });
 });
 
 app.listen(port, host, () => {

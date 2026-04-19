@@ -10,6 +10,12 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 import os
+from datetime import datetime, timedelta
+from .models import SleepSession
+from django.http import JsonResponse
+import json
+from django.views.decorators.csrf import csrf_exempt
+from .models import SleepSession, Baby, HealthReading, DeviceStatus, DailyUserStat, Feeding
 
 
 from django.shortcuts import render, get_object_or_404
@@ -18,6 +24,7 @@ from .models import Baby, HealthReading, DeviceStatus, DailyUserStat
 from .forms import BabyForm
 from django.core.paginator import Paginator
 from notifypy import Notify
+# from notifications.signals import notify
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.http import require_http_methods
 from django.contrib.admin.views.decorators import staff_member_required
@@ -333,26 +340,13 @@ def monitor_dashboard(request, baby_id):
         'device': device
     })
 
-# def api_latest_vitals(request, baby_id):
-#     baby = get_object_or_404(Baby, id=baby_id)
-#     latest = baby.readings.order_by('-timestamp').first()
-    
-#     return JsonResponse({
-#         "heart_rate": latest.heart_rate if latest else None,
-#         "oxygen": latest.oxygen_level if latest else None,
-#         "max_heart_rate": baby.max_heart_rate,
-#         "min_heart_rate": baby.min_heart_rate,
-#         "min_oxygen_level": baby.min_oxygen_level,
-#         "status": latest.sleep_status if latest else "Unknown"
-#     })
+
 def api_latest_vitals(request, baby_id):
     baby = get_object_or_404(Baby, id=baby_id)
     
     try:
-        # Request mock device API including baby id so mock server can
-        # produce per-baby vitals (useful in dev/testing).
-        hr_response = requests.get(f"http://127.0.0.1:3000/api/hr?baby={baby.id}", timeout=1).json()
-        temp_response = requests.get(f"http://127.0.0.1:3000/api/temperature?baby={baby.id}", timeout=1).json()
+        hr_response = requests.get("http://127.0.0.1:3000/api/hr", timeout=1).json()
+        temp_response = requests.get("http://127.0.0.1:3000/api/temperature", timeout=1).json()
         
         hr = hr_response.get('heartRate')
         temp = temp_response.get('temperatureF')
@@ -363,67 +357,6 @@ def api_latest_vitals(request, baby_id):
             baby_temperature=temp,
             oxygen_level=98 # Placeholder
         )
-
-        # Coerce numeric types where possible
-        try:
-            hr_val = int(hr) if hr is not None else None
-        except Exception:
-            hr_val = None
-
-        try:
-            temp_val = float(temp) if temp is not None else None
-        except Exception:
-            temp_val = None
-
-        # Notification on state transition (normal -> alert) to avoid spam.
-        now = time.time()
-        baby_alerts = last_alerts.setdefault(baby.id, {'hr': 0, 'temp': 0})
-        baby_state = last_alert_state.setdefault(baby.id, {'hr': False, 'temp': False})
-
-        # Heart rate alert logic: send notification when we transition
-        # from non-alert to alert. When value returns to normal, clear state
-        # (optionally send a recovery notification).
-        if hr_val is not None:
-            hr_alert = hr_val > (baby.max_heart_rate or 9999) or hr_val < (baby.min_heart_rate or 0)
-            if hr_alert and not baby_state.get('hr'):
-                # send alert now
-                # respect cooldown only if >0 and last sent recently
-                if ALERT_COOLDOWN_SEC <= 0 or now - baby_alerts.get('hr', 0) > ALERT_COOLDOWN_SEC:
-                    notification = Notify()
-                    notification.title = f"Vital alert — {baby.name}"
-                    if hr_val > (baby.max_heart_rate or 9999):
-                        notification.message = f"Heart rate high: {hr_val} BPM (limit {baby.max_heart_rate})"
-                    else:
-                        notification.message = f"Heart rate low: {hr_val} BPM (limit {baby.min_heart_rate})"
-                    try:
-                        notification.send()
-                        baby_alerts['hr'] = now
-                    except Exception:
-                        pass
-                    baby_state['hr'] = True
-            elif not hr_alert and baby_state.get('hr'):
-                # recovered
-                baby_state['hr'] = False
-
-        # Temperature alerts: similar transition logic
-        if temp_val is not None:
-            temp_alert = temp_val > TEMP_HIGH_F or temp_val < TEMP_LOW_F
-            if temp_alert and not baby_state.get('temp'):
-                if ALERT_COOLDOWN_SEC <= 0 or now - baby_alerts.get('temp', 0) > ALERT_COOLDOWN_SEC:
-                    notification = Notify()
-                    notification.title = f"Vital alert — {baby.name}"
-                    if temp_val > TEMP_HIGH_F:
-                        notification.message = f"High temperature: {temp_val:.1f}°F"
-                    else:
-                        notification.message = f"Low temperature: {temp_val:.1f}°F"
-                    try:
-                        notification.send()
-                        baby_alerts['temp'] = now
-                    except Exception:
-                        pass
-                    baby_state['temp'] = True
-            elif not temp_alert and baby_state.get('temp'):
-                baby_state['temp'] = False
 
         return JsonResponse({
             "heart_rate": hr,
@@ -449,10 +382,94 @@ def baby_history_api(request, baby_id):
     data = []
     for r in readings:
         data.append({
-            "timestamp": r.timestamp.strftime('%H:%M:%S'),
             "heart_rate": r.heart_rate,
-            "oxygen": r.oxygen_level
+            "temperature": float(r.baby_temperature), 
+            "timestamp": r.timestamp.strftime("%H:%M:%S")
         })
-    
+    return JsonResponse(data, safe=False)
+
+def get_weight_percentile(weight):
+    if not weight:
+        return 0
+    if weight < 5:
+        return 10
+    elif weight < 7:
+        return 40
+    elif weight < 9:
+        return 65
+    else:
+        return 90
+
+@login_required
+def baby_logs(request, baby_id):
+    baby = get_object_or_404(Baby, id=baby_id, parent=request.user)
+
+    # Calculate metrics
+    next_nap = calculate_next_nap(baby)
+    last_feed = Feeding.objects.filter(baby=baby).order_by('-time').first()
+    percentile = get_weight_percentile(baby.weight_kg)
+
+    return render(request, 'baby_logs.html', {
+        'baby': baby,
+        'next_nap': next_nap,
+        'last_feed': last_feed,
+        'percentile': percentile
+    })
+
+def calculate_next_nap(baby):
+    last_sleep = SleepSession.objects.filter(
+        baby=baby,
+        end_time__isnull=False
+    ).order_by('-end_time').first()
+
+    if not last_sleep:
+        return None
+
+    # Simple age-based wake window (you can improve later)
+    age_days = (datetime.now().date() - baby.birth_date).days
+    age_months = age_days // 30
+
+    if age_months <= 3:
+        wake_window = 90  # minutes
+    elif age_months <= 6:
+        wake_window = 120
+    else:
+        wake_window = 150
+
+    next_nap_time = last_sleep.end_time + timedelta(minutes=wake_window)
+    return next_nap_time
+
+def baby_timeline_api(request, baby_id):
+    baby = get_object_or_404(Baby, id=baby_id)
+
+    sleeps = SleepSession.objects.filter(baby=baby)
+
+    data = []
+    for s in sleeps:
+        data.append({
+            "type": "sleep",
+            "start": s.start_time.strftime("%H:%M"),
+            "end": s.end_time.strftime("%H:%M") if s.end_time else None
+        })
 
     return JsonResponse(data, safe=False)
+
+@csrf_exempt
+def quick_log(request, baby_id):
+    baby = get_object_or_404(Baby, id=baby_id)
+
+    data = json.loads(request.body)
+    log_type = data.get("type")
+
+    if log_type == "sleep":
+        SleepSession.objects.create(baby=baby, start_time=datetime.now())
+
+    elif log_type == "diaper":
+        # Placeholder: Add your Diaper model creation logic here later
+        pass
+        
+    elif log_type == "feed":
+        # Placeholder: Add logic to create a Feeding entry if you want a default behavior
+        pass
+
+    return JsonResponse({"status": "ok"})

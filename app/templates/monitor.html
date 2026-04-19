@@ -3,41 +3,68 @@
 <html>
 <head>
     <link rel="stylesheet" href="{% static 'css/monitor.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="monitor-container">
         <header class="monitor-header">
+            <a href="{% url 'profile' %}" class="exit-btn">
+                <span class="exit-icon">✕</span>
+                <span>Exit Monitor</span>
+            </a>
+            
             <div class="baby-meta">
-                <h2>Monitoring {{ baby.name }}</h2>
-                <span class="status-tag online">● Live Connection</span>
+                <h1>{{ baby.name }}</h1>
+                <div class="status-pill">
+                    <span class="status-dot"></span>
+                    <span id="connection-status">Live Connection</span>
+                </div>
             </div>
         </header>
 
         <div class="vitals-grid">
             <div class="vital-card hr">
-                <h3>Heart Rate</h3>
+                <div class="card-header">
+                    <h3>Heart Rate</h3>
+                    <span class="icon">❤️</span>
+                </div>
                 <div class="value-row">
                     <span id="live-hr" class="large-val">--</span>
                     <span class="unit">BPM</span>
                 </div>
-                <div class="pulse-icon">❤️</div>
             </div>
 
             <div class="vital-card temp">
-                <h3>Temperature</h3>
+                <div class="card-header">
+                    <h3>Temperature</h3>
+                    <span class="icon">🌡️</span>
+                </div>
                 <div class="value-row">
                     <span id="live-temp" class="large-val">--</span>
                     <span class="unit">°F</span>
                 </div>
-                <div class="pulse-icon">🌡️</div>
             </div>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3>Heart Rate History</h3>
+                <span class="time-range">Last 20 readings</span>
+            </div>
+            <canvas id="hrChart"></canvas>
+        </div>
+        
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3>Temperature History</h3>
+            </div>
+            <canvas id="tempChart"></canvas>
         </div>
     </div>
 
     <script>
-        const CURRENT_BABY_ID = {{ baby.id }};
-        const HR_API_URL = `/api/baby/${CURRENT_BABY_ID}/vitals/`;
-        const TEMP_API_URL = `/api/baby/${CURRENT_BABY_ID}/vitals/`;
+        const VITALS_API_URL = "{% url 'api_vitals' baby.id %}";
+        const HISTORY_API_URL = "{% url 'api_history' baby.id %}";
     </script>
     <script src="{% static 'js/app.js' %}"></script>
 </body>

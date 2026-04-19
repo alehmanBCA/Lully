@@ -13,7 +13,22 @@
 <body class="dashboard-page">
   <div class="dashboard-backdrop"></div>
   <main class="dashboard-shell landing-shell">
-    {% include 'nav/site_nav.html' %}
+    <header class="landing-nav">
+      <a class="brand-mark" href="{% url 'home' %}">
+        <img src="{% static 'images/logo.png' %}" alt="Lully logo" class="brand-logo">
+        <span class="brand-copy">
+          <strong>Lully</strong>
+          <small>smart baby monitoring</small>
+        </span>
+      </a>
+      <div class="landing-actions">
+        {% if user.is_superuser %}
+          <a class='admin-link' href="{% url 'admin_dashboard' %}">Admin</a>
+        {% endif %}
+        <a class="nav-link" href="{% url 'login' %}">Login</a>
+        <a class="nav-button" href="{% url 'signup' %}">Get Started</a>
+      </div>
+    </header>
 
     <section class="hero-grid">
       <div class="hero-copy">

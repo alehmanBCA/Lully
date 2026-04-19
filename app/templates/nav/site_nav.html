@@ -21,6 +21,9 @@
       <a class="site-nav__icon-link" href="{% url 'profile' %}" title="Dashboard" aria-label="Dashboard">
         <img class="site-nav__icon" src="{% static 'images/layout.png' %}" alt="Dashboard">
       </a>
+      <a class="site-nav__icon-link" href="{% url 'community' %}" title="Community" aria-label="Community">
+        <img class="site-nav__icon" src="{% static 'images/chat.png' %}" alt="Community">
+      </a>
       {% if user.is_staff %}
         <a class="site-nav__link" href="{% url 'admin_dashboard' %}">Admin</a>
       {% endif %}

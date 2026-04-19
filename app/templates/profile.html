@@ -5,9 +5,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Parent Profile — Lully</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/profile.css' %}">
 </head>
-<body>
+<body class="profile-page">
   {% include 'nav/site_nav.html' %}
   <div class="app-shell">
     <main class="content">
@@ -99,17 +102,52 @@
 
       
 
-      <section class="about">
-        <div class="about-inner">
-          <div class="about-icon">💠</div>
+      <section class="household-panel">
+        <div class="household-panel__copy">
+          <div class="household-icon">💠</div>
           <div>
-            <h3>About Lully Monitor</h3>
-            <ul>
-              <li>Add multiple baby profiles to monitor all your children</li>
-              <li>Click on any baby profile to view their real-time health monitoring</li>
-              <li>Each baby has their own dedicated monitoring dashboard</li>
-              <li>Data is saved locally on your device</li>
-            </ul>
+            <h3>Family access</h3>
+            <p>Use this invite code to let trusted family members view and follow the same baby profiles.</p>
+            {% if household %}
+              <div class="household-code">{{ household.join_code }}</div>
+              <div class="household-meta">{{ household_members|length }} member{{ household_members|length|pluralize }} in this family</div>
+            {% else %}
+              <div class="household-code household-code--empty">Create a baby profile first to generate a share code.</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <form method="POST" class="household-join-form">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="join_household">
+          <label for="join_code">Join a family account</label>
+          <div class="household-join-row">
+            <input id="join_code" type="text" name="join_code" placeholder="Enter household code">
+            <button type="submit" class="join-btn">Join</button>
+          </div>
+        </form>
+
+        <div class="household-members">
+          <h4>Current members</h4>
+          <div class="member-list">
+            {% if household %}
+              {% for member in household_members %}
+                <div class="member-chip">
+                  <span class="member-chip__label">{{ member.user.first_name|default:member.user.username }}</span>
+                  <span class="member-role member-role--{{ member.role }}">{{ member.get_role_display }}</span>
+                  {% if can_manage_members and member.user_id != request.user.id and member.role != 'owner' and member.user_id != household.owner_id %}
+                    <form method="POST" action="{% url 'remove_household_member' member.id %}" class="member-remove-form" onsubmit="return confirm('Remove this member from your family account?');">
+                      {% csrf_token %}
+                      <button type="submit" class="member-remove-btn">Remove</button>
+                    </form>
+                  {% endif %}
+                </div>
+              {% empty %}
+                <span class="member-chip">Just you for now</span>
+              {% endfor %}
+            {% else %}
+              <span class="member-chip">No shared account yet</span>
+            {% endif %}
           </div>
         </div>
       </section>

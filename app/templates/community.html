@@ -1,0 +1,229 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Community — Lully</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/profile.css' %}">
+</head>
+<body class="community-page">
+  {% include 'nav/site_nav.html' %}
+  <div class="community-shell">
+    <main class="content">
+      <section class="community-panel">
+        <div class="community-title-row">
+          <h2>Community Feed</h2>
+          <button type="button" class="community-add-btn" id="openPostModal" aria-label="Create Post" title="Create Post">
+            <img src="{% static 'images/add.png' %}" alt="Create post">
+          </button>
+        </div>
+        <p class="settings-intro">Ask questions, share updates, and help each other out.</p>
+
+        <form method="get" class="community-searchbar">
+          <input type="text" name="q" value="{{ query }}" placeholder="Search posts or hashtags">
+          <select name="type">
+            <option value="all" {% if current_type == 'all' %}selected{% endif %}>All Posts</option>
+            <option value="question" {% if current_type == 'question' %}selected{% endif %}>Question</option>
+            <option value="mine" {% if current_type == 'mine' %}selected{% endif %}>My Posts</option>
+          </select>
+          <button type="submit" class="btn">Search</button>
+          <a href="{% url 'community' %}" class="btn btn-link">Reset</a>
+        </form>
+
+        <div id="communityPostModal" class="community-modal" aria-hidden="true">
+          <div class="community-modal-card" role="dialog" aria-modal="true" aria-labelledby="communityModalTitle">
+            <div class="community-modal-header">
+              <h3 id="communityModalTitle">Create a Post</h3>
+              <button type="button" class="community-modal-close" id="closePostModal" aria-label="Close">×</button>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" class="community-composer">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="create_post">
+              <label class="question-toggle" for="id_is_question">
+                {{ post_form.is_question }}
+                <span>This post is a question</span>
+              </label>
+              <div class="settings-input-grid">
+                <div class="form-row">
+                  <label class="field-label" for="id_title">Title</label>
+                  {{ post_form.title }}
+                </div>
+              </div>
+              <div class="form-row">
+                <label class="field-label" for="id_caption">Post content</label>
+                {{ post_form.caption }}
+              </div>
+              <div class="settings-input-grid">
+                <div class="form-row">
+                  <label class="field-label" for="id_tags">Hashtags</label>
+                  {{ post_form.tags }}
+                </div>
+                <div class="form-row">
+                  <label class="field-label" for="id_image">Photo</label>
+                  {{ post_form.image }}
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn">Post</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="community-layout">
+          <div class="community-feed">
+            {% if posts %}
+              <div class="community-post-list">
+                {% for post in posts %}
+                  <article class="community-post-card">
+                    <div class="community-post-header">
+                      <div>
+                        <strong>{{ post.title|default:"Post" }}</strong>
+                        <p>by {{ post.user.username }} · {{ post.created_at|date:"M d, Y" }}</p>
+                      </div>
+                      {% if post.post_type == 'question' %}
+                        <span class="post-badge">Question</span>
+                      {% endif %}
+                    </div>
+                    {% if post.image %}
+                      <img class="community-post-image" src="{{ post.image.url }}" alt="{{ post.title }}">
+                    {% endif %}
+                    <p class="community-post-body">{{ post.caption }}</p>
+                    <p class="community-tags">{{ post.tags }}</p>
+                    <div class="community-actions">
+                      <form method="post" action="{% url 'community-like' post.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn">Like ({{ post.no_of_likes }})</button>
+                      </form>
+                      {% if post.user_id == request.user.id %}
+                        <form method="post" action="{% url 'community-delete' post.id %}" class="community-delete-form" onsubmit="return confirm('Are you sure you want to delete this post?');">
+                          {% csrf_token %}
+                          <button type="submit" class="community-delete-btn delete" title="Delete post" aria-label="Delete post">🗑️</button>
+                        </form>
+                      {% endif %}
+                      <button type="button" class="community-comment-toggle" data-target="comments-{{ post.id }}" aria-label="Open comments" title="Comments" aria-expanded="false">
+                        <img src="{% static 'images/comment.png' %}" alt="Comments">
+                      </button>
+                    </div>
+                    <div class="community-comments" id="comments-{{ post.id }}">
+                      <h4>Comments</h4>
+                      <div class="community-comments-list">
+                        {% for comment in post.comments.all %}
+                          <div class="community-comment">
+                            <strong>{{ comment.user.username }}</strong>
+                            <span>{{ comment.created_at|date:"M d, Y" }}</span>
+                            <p>{{ comment.text }}</p>
+                          </div>
+                        {% empty %}
+                          <p class="settings-empty">No comments yet. Be the first to reply!</p>
+                        {% endfor %}
+                      </div>
+                      <form method="post" action="{% url 'community-comment' post.id %}" class="community-comment-form">
+                        {% csrf_token %}
+                        {{ comment_form.text }}
+                        <button type="submit" class="btn">Comment</button>
+                      </form>
+                    </div>
+                  </article>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="settings-empty">No posts found yet.</p>
+            {% endif %}
+          </div>
+
+          <aside class="community-sidebar">
+            <div class="sidebar-card">
+              <div class="sidebar-card-header">
+                <h3>Categories</h3>
+                <p>Jump into popular, new, or trending posts.</p>
+              </div>
+
+              <div class="category-group">
+                <a class="category-chip {% if current_sort == 'popular' %}is-active{% endif %}" href="?q={{ query|urlencode }}&type={{ current_type }}&sort=popular">Popular</a>
+                <a class="category-chip {% if current_sort == 'new' %}is-active{% endif %}" href="?q={{ query|urlencode }}&type={{ current_type }}&sort=new">New</a>
+              </div>
+
+              <div class="sidebar-section">
+                <h4>Popular tags</h4>
+                <div class="tag-chip-list">
+                  {% for tag in suggested_tags %}
+                    <a class="tag-chip" href="?q={{ tag|urlencode }}&type={{ current_type }}&sort={{ current_sort }}">#{{ tag }}</a>
+                  {% endfor %}
+                </div>
+              </div>
+
+              {% if trending_tags %}
+                <div class="sidebar-section">
+                  <h4>Trending now</h4>
+                  <div class="tag-chip-list">
+                    {% for tag in trending_tags %}
+                      <a class="tag-chip" href="?q={{ tag|urlencode }}&type={{ current_type }}&sort={{ current_sort }}">#{{ tag }}</a>
+                    {% endfor %}
+                  </div>
+                </div>
+              {% endif %}
+
+              <div class="sidebar-note">
+                <p>Use hashtags to make posts easier to find.</p>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      const modal = document.getElementById('communityPostModal');
+      const openBtn = document.getElementById('openPostModal');
+      const closeBtn = document.getElementById('closePostModal');
+
+      function openModal() {
+        if (!modal) return;
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeModal() {
+        if (!modal) return;
+        modal.classList.remove('is-open');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+
+      openBtn?.addEventListener('click', openModal);
+      closeBtn?.addEventListener('click', closeModal);
+      modal?.addEventListener('click', (event) => {
+        if (event.target === modal) closeModal();
+      });
+
+      document.querySelectorAll('.community-comment-toggle').forEach((button) => {
+        button.addEventListener('click', () => {
+          const targetId = button.getAttribute('data-target');
+          const panel = targetId ? document.getElementById(targetId) : null;
+          if (!panel) return;
+          const isOpen = panel.classList.contains('is-open');
+
+          document.querySelectorAll('.community-comments.is-open').forEach((openPanel) => {
+            openPanel.classList.remove('is-open');
+          });
+          document.querySelectorAll('.community-comment-toggle').forEach((toggleButton) => {
+            toggleButton.setAttribute('aria-expanded', 'false');
+          });
+
+          if (!isOpen) {
+            panel.classList.add('is-open');
+            button.setAttribute('aria-expanded', 'true');
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

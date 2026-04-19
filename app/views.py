@@ -1,29 +1,93 @@
+from collections import Counter
+import re
+
 import requests
-from django.shortcuts import render
-from django.shortcuts import render, redirect
+from pathlib import Path
+from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.models import User
-from django.db.models import Max
+from django.db.models import Count, Max, Q
 from datetime import date, timedelta
 import time
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
+from .models import Baby, DailyUserStat, DeviceStatus, Household, HouseholdMember, HealthReading, LikePost, Post, Comment, UserPreference
 import os
-
-
-from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
-from .models import Baby, HealthReading, DeviceStatus, DailyUserStat, UserPreference
-from .forms import BabyForm
+from .forms import BabyForm, PostForm, CommentForm
 from django.core.paginator import Paginator
 from notifypy import Notify
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.http import require_http_methods
-from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.http import require_POST
-from pathlib import Path
 
+def get_accessible_babies(user):
+    return Baby.objects.filter(
+        Q(parent=user) |
+        Q(household__memberships__user=user, household__memberships__is_active=True)
+    ).distinct().select_related('household')
+
+def get_user_household(user):
+    membership = HouseholdMember.objects.select_related('household').filter(user=user, is_active=True).first()
+    if membership:
+        return membership.household
+
+    owned_household = Household.objects.filter(owner=user).first()
+    if owned_household:
+        return owned_household
+
+    baby_household = Baby.objects.filter(parent=user, household__isnull=False).select_related('household').first()
+    if baby_household:
+        return baby_household.household
+
+    return None
+
+
+def ensure_household(user):
+    household = get_user_household(user)
+    if household:
+        return household
+
+    household = Household.objects.create(
+        owner=user,
+        name=f"{user.get_username()}'s Family"
+    )
+    HouseholdMember.objects.create(household=household, user=user, role='owner')
+    return household
+
+def join_household(user, join_code):
+    code = (join_code or '').strip().upper()
+    if not code:
+        return None, 'Please enter a household code.'
+
+    household = Household.objects.filter(join_code__iexact=code).first()
+    if not household:
+        return None, 'That household code was not found.'
+
+    membership = HouseholdMember.objects.filter(user=user).first()
+    if membership:
+        if membership.household_id == household.id:
+            membership.is_active = True
+            membership.save(update_fields=['is_active'])
+            return household, 'You are already in this household.'
+        return None, 'You already belong to another household.'
+
+    HouseholdMember.objects.create(household=household, user=user, role='viewer')
+    return household, f'Joined {household.name} successfully.'
+
+
+def can_manage_household(user, household):
+    if not household:
+        return False
+    if household.owner_id == user.id:
+        return True
+    return HouseholdMember.objects.filter(
+        household=household,
+        user=user,
+        role='owner',
+        is_active=True,
+    ).exists()
 # Notification configuration: simple temp bounds. Set ALERT_COOLDOWN_SEC to 0
 # to allow sending multiple notifications concurrently (no per-type cooldown).
 # We keep this in-memory to avoid adding DB migrations; it's sufficient
@@ -44,6 +108,113 @@ def home(request):
     # Remove that behavior — notifications are now sent when vitals are
     # detected as unhealthy in `api_latest_vitals`.
     return render(request, 'dashboard.html')
+
+
+@login_required
+def community(request):
+    query = request.GET.get('q', '').strip()
+    post_type = request.GET.get('type', 'all').strip().lower()
+    sort_by = request.GET.get('sort', 'new').strip().lower()
+    if post_type not in {'all', 'question', 'mine'}:
+        post_type = 'all'
+    if sort_by not in {'new', 'popular', 'trending'}:
+        sort_by = 'new'
+
+    if request.method == 'POST' and request.POST.get('action') == 'create_post':
+        post_form = PostForm(request.POST, request.FILES)
+        if post_form.is_valid():
+            post = post_form.save(commit=False)
+            post.user = request.user
+            post.save()
+            messages.success(request, 'Post shared successfully.')
+            return redirect('community')
+    else:
+        post_form = PostForm()
+
+    posts = Post.objects.select_related('user').prefetch_related('comments__user').all()
+    if query:
+        posts = posts.filter(
+            Q(title__icontains=query) |
+            Q(caption__icontains=query) |
+            Q(tags__icontains=query)
+        )
+    if post_type == 'question':
+        posts = posts.filter(post_type=post_type)
+    elif post_type == 'mine':
+        posts = posts.filter(user=request.user)
+
+    if sort_by == 'popular':
+        posts = posts.order_by('-no_of_likes', '-created_at')
+    elif sort_by == 'trending':
+        posts = posts.annotate(comment_count=Count('comments')).order_by('-comment_count', '-no_of_likes', '-created_at')
+    else:
+        posts = posts.order_by('-created_at')
+
+    tag_counts = Counter()
+    for raw_tags in Post.objects.exclude(tags__isnull=True).values_list('tags', flat=True):
+        for token in re.split(r'[\s,]+', raw_tags or ''):
+            cleaned_tag = token.strip().lstrip('#').lower()
+            if cleaned_tag:
+                tag_counts[cleaned_tag] += 1
+
+    trending_tags = [tag for tag, _count in tag_counts.most_common(8)]
+    suggested_tags = ['newborn', 'parenting', 'sleep', 'feeding', 'milestones', 'tips']
+
+    comment_form = CommentForm(auto_id=False)
+
+    return render(request, 'community.html', {
+        'post_form': post_form,
+        'comment_form': comment_form,
+        'query': query,
+        'current_type': post_type,
+        'current_sort': sort_by,
+        'posts': posts,
+        'trending_tags': trending_tags,
+        'suggested_tags': suggested_tags,
+    })
+
+
+@login_required
+@require_POST
+def like_post(request, post_id):
+    post = get_object_or_404(Post, pk=post_id)
+    existing_like = LikePost.objects.filter(post=post, user=request.user).first()
+
+    if existing_like:
+        existing_like.delete()
+        if post.no_of_likes > 0:
+            post.no_of_likes -= 1
+    else:
+        LikePost.objects.create(post=post, user=request.user)
+        post.no_of_likes += 1
+
+    post.save(update_fields=['no_of_likes'])
+    return redirect(request.META.get('HTTP_REFERER', 'community'))
+
+
+@login_required
+@require_POST
+def add_comment(request, post_id):
+    post = get_object_or_404(Post, pk=post_id)
+    form = CommentForm(request.POST)
+
+    if form.is_valid():
+        comment = form.save(commit=False)
+        comment.post = post
+        comment.user = request.user
+        comment.save()
+        messages.success(request, 'Comment added.')
+
+    return redirect(request.META.get('HTTP_REFERER', 'community'))
+
+
+@login_required
+@require_POST
+def delete_post(request, post_id):
+    post = get_object_or_404(Post, pk=post_id, user=request.user)
+    post.delete()
+    messages.success(request, 'Post deleted successfully.')
+    return redirect(request.META.get('HTTP_REFERER', 'community'))
 
 def admin_dashboard(request):
     """Render an analytics-style admin dashboard.
@@ -184,18 +355,26 @@ def admin_edit_user(request, user_id):
 @login_required
 def profile(request):
     user = request.user
+    household = get_user_household(user)
     
     if request.method == 'POST':
+        action = request.POST.get('action', 'create_baby')
+
+        if action == 'join_household':
+            _, message = join_household(user, request.POST.get('join_code'))
+            messages.info(request, message)
+            return redirect('profile')
+
         form = BabyForm(request.POST, request.FILES) 
         if form.is_valid():
             new_baby = form.save(commit=False)
             new_baby.parent = user
+            new_baby.household = ensure_household(user)
 
             preference = UserPreference.objects.filter(user=user).first()
             if preference:
                 new_baby.min_heart_rate = preference.default_min_heart_rate
                 new_baby.max_heart_rate = preference.default_max_heart_rate
-                new_baby.min_oxygen_level = preference.default_min_oxygen_level
 
             new_baby.save()
             messages.success(request, f"Profile for {new_baby.name} created!")
@@ -219,15 +398,56 @@ def profile(request):
 
     name = user.first_name or user.get_username()
     
-    babies = Baby.objects.filter(parent=user)
+    babies = get_accessible_babies(user)
     form = BabyForm()
+    household_members = HouseholdMember.objects.none()
+    can_manage_members = False
+    if household:
+        household_members = HouseholdMember.objects.select_related('user').filter(household=household, is_active=True).order_by('joined_at')
+        can_manage_members = can_manage_household(user, household)
 
     return render(request, 'profile.html', {
         'profile_url': profile_url, 
         'name': name,
         'babies': babies,
+        'household': household,
+        'household_members': household_members,
+        'can_manage_members': can_manage_members,
         'form': form
     })
+
+
+@login_required
+@require_POST
+def remove_household_member(request, member_id):
+    household = get_user_household(request.user)
+    if not household:
+        messages.error(request, 'No household found.')
+        return redirect('profile')
+
+    if not can_manage_household(request.user, household):
+        messages.error(request, 'Only household owners can remove members.')
+        return redirect('profile')
+
+    membership = get_object_or_404(
+        HouseholdMember.objects.select_related('user'),
+        id=member_id,
+        household=household,
+        is_active=True,
+    )
+
+    if membership.user_id == request.user.id:
+        messages.error(request, 'You cannot remove yourself.')
+        return redirect('profile')
+
+    if membership.role == 'owner' or membership.user_id == household.owner_id:
+        messages.error(request, 'Owner accounts cannot be removed.')
+        return redirect('profile')
+
+    membership.is_active = False
+    membership.save(update_fields=['is_active'])
+    messages.success(request, f"Removed {membership.user.get_username()} from the household.")
+    return redirect('profile')
 
 @login_required
 def delete_baby(request, baby_id):
@@ -283,18 +503,32 @@ def account_edit(request):
 
         min_hr_raw = request.POST.get('default_min_heart_rate', '').strip()
         max_hr_raw = request.POST.get('default_max_heart_rate', '').strip()
-        min_oxygen_raw = request.POST.get('default_min_oxygen_level', '').strip()
+        min_temp_raw = request.POST.get('default_min_temperature', '').strip()
+        max_temp_raw = request.POST.get('default_max_temperature', '').strip()
 
         try:
             min_hr = int(min_hr_raw)
-            max_hr = int(max_hr_raw)
-            min_oxygen = int(min_oxygen_raw)
             if min_hr > 0:
                 preference.default_min_heart_rate = min_hr
+        except (TypeError, ValueError):
+            pass
+
+        try:
+            max_hr = int(max_hr_raw)
             if max_hr > 0:
                 preference.default_max_heart_rate = max_hr
-            if min_oxygen > 0:
-                preference.default_min_oxygen_level = min_oxygen
+        except (TypeError, ValueError):
+            pass
+
+        try:
+            min_temp = float(min_temp_raw)
+            preference.default_min_temperature = min_temp
+        except (TypeError, ValueError):
+            pass
+
+        try:
+            max_temp = float(max_temp_raw)
+            preference.default_max_temperature = max_temp
         except (TypeError, ValueError):
             pass
 
@@ -364,8 +598,9 @@ def logout_view(request):
 
 
 
+@login_required
 def monitor_dashboard(request, baby_id):
-    baby = get_object_or_404(Baby, id=baby_id)
+    baby = get_object_or_404(get_accessible_babies(request.user), id=baby_id)
     latest_vitals = baby.readings.order_by('-timestamp').first()
     device, created = DeviceStatus.objects.get_or_create(
         baby=baby, 
@@ -382,16 +617,9 @@ def monitor_dashboard(request, baby_id):
 #     baby = get_object_or_404(Baby, id=baby_id)
 #     latest = baby.readings.order_by('-timestamp').first()
     
-#     return JsonResponse({
-#         "heart_rate": latest.heart_rate if latest else None,
-#         "oxygen": latest.oxygen_level if latest else None,
-#         "max_heart_rate": baby.max_heart_rate,
-#         "min_heart_rate": baby.min_heart_rate,
-#         "min_oxygen_level": baby.min_oxygen_level,
-#         "status": latest.sleep_status if latest else "Unknown"
-#     })
+@login_required
 def api_latest_vitals(request, baby_id):
-    baby = get_object_or_404(Baby, id=baby_id)
+    baby = get_object_or_404(get_accessible_babies(request.user), id=baby_id)
     
     try:
         # Request mock device API including baby id so mock server can
@@ -406,7 +634,7 @@ def api_latest_vitals(request, baby_id):
             baby=baby,
             heart_rate=hr,
             baby_temperature=temp,
-            oxygen_level=98 # Placeholder
+            oxygen_level=98
         )
 
         # Coerce numeric types where possible
@@ -487,8 +715,9 @@ def api_latest_vitals(request, baby_id):
 
 
 
+@login_required
 def baby_history_api(request, baby_id):
-    baby = get_object_or_404(Baby, id=baby_id)
+    baby = get_object_or_404(get_accessible_babies(request.user), id=baby_id)
     readings = baby.readings.order_by('-timestamp')[:20]
     
     data = []

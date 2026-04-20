@@ -158,6 +158,17 @@ class SleepSession(models.Model):
     end_time = models.DateTimeField(null=True, blank=True)
     quality_score = models.IntegerField(default=100)
 
+class Feeding(models.Model):
+    baby = models.ForeignKey(Baby, on_delete=models.CASCADE)
+    time = models.DateTimeField(auto_now_add=True)
+
+    SIDE_CHOICES = [
+        ('L', 'Left'),
+        ('R', 'Right'),
+        ('B', 'Both'),
+    ]
+    side = models.CharField(max_length=1, choices=SIDE_CHOICES)
+
 class DeviceStatus(models.Model):
     baby = models.OneToOneField(Baby, on_delete=models.CASCADE)
     is_online = models.BooleanField(default=False)

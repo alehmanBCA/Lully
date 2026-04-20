@@ -82,6 +82,10 @@
             <div class="actions">
               <a href="{% url 'monitor_dashboard' baby.id %}" class="view">View Monitor</a>
               
+              <a href="{% url 'baby_logs' baby.id %}" class="notes-btn" title="Logs & Activities">
+                <img src="{% static 'images/notes.png' %}" alt="Notes">
+              </a>
+              
               <form action="{% url 'delete_baby' baby.id %}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this profile?');">
                 {% csrf_token %}
                 <button type="submit" class="delete" title="Delete">🗑️</button>

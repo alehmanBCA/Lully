@@ -17,9 +17,11 @@ Including another URLconf
 from django.urls import include, path
 from django.conf import settings
 from django.conf.urls.static import static
+# import notifications.urls
 
 urlpatterns = [
     path('', include('app.urls')),
+    # path('inbox/notifications/', include(notifications.urls, namespace='notifications')),
 ]
 
 if settings.DEBUG:

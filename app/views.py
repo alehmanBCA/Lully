@@ -14,10 +14,20 @@ from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from .models import Baby, DailyUserStat, DeviceStatus, Household, HouseholdMember, HealthReading, LikePost, Post, Comment, UserPreference
 import os
+from datetime import datetime, timedelta
+from .models import SleepSession
+from django.http import JsonResponse
+import json
+from django.views.decorators.csrf import csrf_exempt
+from .models import SleepSession, Baby, HealthReading, DeviceStatus, DailyUserStat, Feeding
+
+
+from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from .forms import BabyForm, PostForm, CommentForm
 from django.core.paginator import Paginator
 from notifypy import Notify
+# from notifications.signals import notify
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.http import require_POST
@@ -618,14 +628,13 @@ def monitor_dashboard(request, baby_id):
 #     latest = baby.readings.order_by('-timestamp').first()
     
 @login_required
+
 def api_latest_vitals(request, baby_id):
-    baby = get_object_or_404(get_accessible_babies(request.user), id=baby_id)
+    baby = get_object_or_404(Baby, id=baby_id)
     
     try:
-        # Request mock device API including baby id so mock server can
-        # produce per-baby vitals (useful in dev/testing).
-        hr_response = requests.get(f"http://127.0.0.1:3000/api/hr?baby={baby.id}", timeout=1).json()
-        temp_response = requests.get(f"http://127.0.0.1:3000/api/temperature?baby={baby.id}", timeout=1).json()
+        hr_response = requests.get("http://127.0.0.1:3000/api/hr", timeout=1).json()
+        temp_response = requests.get("http://127.0.0.1:3000/api/temperature", timeout=1).json()
         
         hr = hr_response.get('heartRate')
         temp = temp_response.get('temperatureF')
@@ -723,10 +732,94 @@ def baby_history_api(request, baby_id):
     data = []
     for r in readings:
         data.append({
-            "timestamp": r.timestamp.strftime('%H:%M:%S'),
             "heart_rate": r.heart_rate,
-            "oxygen": r.oxygen_level
+            "temperature": float(r.baby_temperature), 
+            "timestamp": r.timestamp.strftime("%H:%M:%S")
         })
-    
+    return JsonResponse(data, safe=False)
+
+def get_weight_percentile(weight):
+    if not weight:
+        return 0
+    if weight < 5:
+        return 10
+    elif weight < 7:
+        return 40
+    elif weight < 9:
+        return 65
+    else:
+        return 90
+
+@login_required
+def baby_logs(request, baby_id):
+    baby = get_object_or_404(Baby, id=baby_id, parent=request.user)
+
+    # Calculate metrics
+    next_nap = calculate_next_nap(baby)
+    last_feed = Feeding.objects.filter(baby=baby).order_by('-time').first()
+    percentile = get_weight_percentile(baby.weight_kg)
+
+    return render(request, 'baby_logs.html', {
+        'baby': baby,
+        'next_nap': next_nap,
+        'last_feed': last_feed,
+        'percentile': percentile
+    })
+
+def calculate_next_nap(baby):
+    last_sleep = SleepSession.objects.filter(
+        baby=baby,
+        end_time__isnull=False
+    ).order_by('-end_time').first()
+
+    if not last_sleep:
+        return None
+
+    # Simple age-based wake window (you can improve later)
+    age_days = (datetime.now().date() - baby.birth_date).days
+    age_months = age_days // 30
+
+    if age_months <= 3:
+        wake_window = 90  # minutes
+    elif age_months <= 6:
+        wake_window = 120
+    else:
+        wake_window = 150
+
+    next_nap_time = last_sleep.end_time + timedelta(minutes=wake_window)
+    return next_nap_time
+
+def baby_timeline_api(request, baby_id):
+    baby = get_object_or_404(Baby, id=baby_id)
+
+    sleeps = SleepSession.objects.filter(baby=baby)
+
+    data = []
+    for s in sleeps:
+        data.append({
+            "type": "sleep",
+            "start": s.start_time.strftime("%H:%M"),
+            "end": s.end_time.strftime("%H:%M") if s.end_time else None
+        })
 
     return JsonResponse(data, safe=False)
+
+@csrf_exempt
+def quick_log(request, baby_id):
+    baby = get_object_or_404(Baby, id=baby_id)
+
+    data = json.loads(request.body)
+    log_type = data.get("type")
+
+    if log_type == "sleep":
+        SleepSession.objects.create(baby=baby, start_time=datetime.now())
+
+    elif log_type == "diaper":
+        # Placeholder: Add your Diaper model creation logic here later
+        pass
+        
+    elif log_type == "feed":
+        # Placeholder: Add logic to create a Feeding entry if you want a default behavior
+        pass
+
+    return JsonResponse({"status": "ok"})

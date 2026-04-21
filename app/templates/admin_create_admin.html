@@ -6,14 +6,17 @@
   <title>Create Admin</title>
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
   <style>
-    .create-card { max-width:640px; margin:28px auto; background:#fff; padding:24px; border-radius:12px; box-shadow:0 8px 24px rgba(6,41,70,0.06); }
+    .create-card { max-width:640px; margin:28px auto; background:#fafafa; padding:24px; border-radius:12px; box-shadow:0 8px 24px rgba(6,41,70,0.06); }
     .form-row { margin-bottom:12px; }
     label { display:block; font-weight:700; margin-bottom:6px; color:#0b4a66 }
-    input[type="text"], input[type="email"], input[type="password"] { width:100%; padding:10px 12px; border-radius:8px; border:1px solid #d8eaf6 }
+    input[type="text"], input[type="email"], input[type="password"] { width:100%; padding:10px 12px; border-radius:8px; border:1px solid #d8eaf6; background:#fafafa !important; box-shadow:none; appearance:none; color:#123e67; caret-color:#123e67 }
+    input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus { background:#fafafa !important; outline:none; border-color:#cfdfea }
+    input[type="text"]:-webkit-autofill, input[type="email"]:-webkit-autofill, input[type="password"]:-webkit-autofill { -webkit-box-shadow:0 0 0 1000px #fafafa inset !important; box-shadow:0 0 0 1000px #fafafa inset !important; -webkit-text-fill-color:#123e67; caret-color:#123e67 }
     .form-actions { display:flex; gap:12px; margin-top:14px }
   </style>
 </head>
 <body class="dashboard-page">
+  {% include 'nav/site_nav.html' %}
   <main class="dashboard-shell">
     <div class="create-card">
       <h2>Create admin account</h2>
@@ -45,3 +48,4 @@
   </main>
 </body>
 </html>
+

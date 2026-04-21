@@ -1,0 +1,41 @@
+{% load static %}
+
+<nav class="site-nav" aria-label="Site navigation">
+  <div class="site-nav__brand" role="img" aria-label="Lully Parent Profile">
+    <img class="site-nav__logo" src="{% static 'images/logo.png' %}" alt="Lully logo">
+    <span class="site-nav__brand-copy">
+      <span class="site-nav__title">
+        {% if user.is_authenticated %}
+          {% firstof user.first_name user.username "Parent" %}'s Profile
+        {% else %}
+          Parent Profile
+        {% endif %}
+      </span>
+    </span>
+  </div>
+  <div class="site-nav__links">
+    {% if user.is_authenticated %}
+      <a class="site-nav__icon-link" href="{% url 'account_edit' %}" title="Account" aria-label="Account">
+        <img class="site-nav__icon" src="{% static 'images/user.png' %}" alt="Profile">
+      </a>
+      <a class="site-nav__icon-link" href="{% url 'profile' %}" title="Dashboard" aria-label="Dashboard">
+        <img class="site-nav__icon" src="{% static 'images/layout.png' %}" alt="Dashboard">
+      </a>
+      <a class="site-nav__icon-link" href="{% url 'community' %}" title="Community" aria-label="Community">
+        <img class="site-nav__icon" src="{% static 'images/chat.png' %}" alt="Community">
+      </a>
+      {% if user.is_staff %}
+        <a class="site-nav__link" href="{% url 'admin_dashboard' %}">Admin</a>
+      {% endif %}
+      <form method="post" action="{% url 'logout' %}" style="margin: 0;">
+        {% csrf_token %}
+        <button class="site-nav__icon-link" type="submit" title="Logout" aria-label="Logout">
+          <img class="site-nav__icon" src="{% static 'images/logout.png' %}" alt="Logout">
+        </button>
+      </form>
+    {% else %}
+      <a class="site-nav__link" href="{% url 'login' %}">Login</a>
+      <a class="site-nav__link" href="{% url 'signup' %}">Sign Up</a>
+    {% endif %}
+  </div>
+</nav>

@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
 </head>
 <body class="dashboard-page">
+  {% include 'nav/site_nav.html' %}
   <main class="dashboard-shell">
     <header class="landing-nav">
       <a class="brand-mark" href="{% url 'home' %}">

@@ -91,6 +91,18 @@ class HouseholdSharingTests(TestCase):
 		membership = HouseholdMember.objects.get(user=self.grandma)
 		self.assertEqual(membership.household, self.household)
 
+	def test_invalid_join_code_shows_message(self):
+		self.client.force_login(self.grandma)
+
+		response = self.client.post(
+			reverse('profile'),
+			{'action': 'join_household', 'join_code': 'not-a-real-code'},
+			follow=True,
+		)
+
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, 'That household code was not found.')
+
 	def test_non_member_cannot_open_monitor(self):
 		self.client.force_login(self.stranger)
 

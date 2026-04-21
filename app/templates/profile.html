@@ -14,6 +14,15 @@
   {% include 'nav/site_nav.html' %}
   <div class="app-shell">
     <main class="content">
+      {% if messages %}
+        <div class="auth-messages" style="margin-bottom: 18px;">
+          <ul>
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
       <!-- Angel's Stuff -->
        <!-- <div class="controls">
         <button class="btn add" onclick="toggleModal(true)">+ Add Baby Profile</button>

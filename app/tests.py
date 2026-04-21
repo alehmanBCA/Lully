@@ -63,6 +63,34 @@ class HouseholdSharingTests(TestCase):
 		membership = HouseholdMember.objects.get(user=self.grandma)
 		self.assertEqual(membership.household, self.household)
 
+	def test_join_code_accepts_pasted_link(self):
+		self.client.force_login(self.grandma)
+		invite_link = f"https://example.com/invite?join_code={self.household.join_code.lower()}"
+
+		response = self.client.post(
+			reverse('profile'),
+			{'action': 'join_household', 'join_code': invite_link},
+			follow=True,
+		)
+
+		self.assertEqual(response.status_code, 200)
+		membership = HouseholdMember.objects.get(user=self.grandma)
+		self.assertEqual(membership.household, self.household)
+
+	def test_join_code_accepts_message_with_code(self):
+		self.client.force_login(self.grandma)
+		invite_message = f"Join our family with this code: {self.household.join_code}"
+
+		response = self.client.post(
+			reverse('profile'),
+			{'action': 'join_household', 'join_code': invite_message},
+			follow=True,
+		)
+
+		self.assertEqual(response.status_code, 200)
+		membership = HouseholdMember.objects.get(user=self.grandma)
+		self.assertEqual(membership.household, self.household)
+
 	def test_non_member_cannot_open_monitor(self):
 		self.client.force_login(self.stranger)
 

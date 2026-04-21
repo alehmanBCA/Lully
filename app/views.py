@@ -1,5 +1,6 @@
 from collections import Counter
 import re
+from urllib.parse import parse_qs, urlparse
 
 import requests
 from pathlib import Path
@@ -67,12 +68,38 @@ def ensure_household(user):
     return household
 
 def join_household(user, join_code):
-    raw_code = (join_code or '').strip().upper()
-    code = re.sub(r'[^A-Z0-9]', '', raw_code)
-    if not code:
+    raw_input = (join_code or '').strip()
+    if not raw_input:
         return None, 'Please enter a household code.'
 
-    household = Household.objects.filter(join_code__iexact=code).first()
+    candidates = []
+    parsed = urlparse(raw_input)
+    if parsed.scheme and (parsed.netloc or parsed.path):
+        query_values = parse_qs(parsed.query)
+        for key in ('join_code', 'code', 'household_code', 'invite'):
+            candidates.extend(query_values.get(key, []))
+        candidates.extend(re.split(r'[^A-Za-z0-9]+', parsed.path or ''))
+
+    candidates.append(raw_input)
+    candidates.extend(re.split(r'[^A-Za-z0-9]+', raw_input))
+
+    normalized_candidates = []
+    seen = set()
+    for candidate in candidates:
+        normalized = re.sub(r'[^A-Z0-9]', '', (candidate or '').upper())
+        if 6 <= len(normalized) <= 12 and normalized not in seen:
+            seen.add(normalized)
+            normalized_candidates.append(normalized)
+
+    if not normalized_candidates:
+        return None, 'Please enter a valid household code.'
+
+    household = None
+    for candidate in normalized_candidates:
+        household = Household.objects.filter(join_code__iexact=candidate).first()
+        if household:
+            break
+
     if not household:
         return None, 'That household code was not found.'
 

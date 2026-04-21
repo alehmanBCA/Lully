@@ -67,7 +67,8 @@ def ensure_household(user):
     return household
 
 def join_household(user, join_code):
-    code = (join_code or '').strip().upper()
+    raw_code = (join_code or '').strip().upper()
+    code = re.sub(r'[^A-Z0-9]', '', raw_code)
     if not code:
         return None, 'Please enter a household code.'
 
@@ -75,12 +76,18 @@ def join_household(user, join_code):
     if not household:
         return None, 'That household code was not found.'
 
-    membership = HouseholdMember.objects.filter(user=user).first()
+    membership = HouseholdMember.objects.select_related('household').filter(user=user).first()
     if membership:
         if membership.household_id == household.id:
             membership.is_active = True
             membership.save(update_fields=['is_active'])
             return household, 'You are already in this household.'
+        if not membership.is_active:
+            membership.household = household
+            membership.role = 'viewer'
+            membership.is_active = True
+            membership.save(update_fields=['household', 'role', 'is_active'])
+            return household, f'Joined {household.name} successfully.'
         return None, 'You already belong to another household.'
 
     HouseholdMember.objects.create(household=household, user=user, role='viewer')
@@ -412,9 +419,11 @@ def profile(request):
     form = BabyForm()
     household_members = HouseholdMember.objects.none()
     can_manage_members = False
+    is_household_owner = False
     if household:
         household_members = HouseholdMember.objects.select_related('user').filter(household=household, is_active=True).order_by('joined_at')
         can_manage_members = can_manage_household(user, household)
+        is_household_owner = household.owner_id == user.id
 
     return render(request, 'profile.html', {
         'profile_url': profile_url, 
@@ -423,6 +432,7 @@ def profile(request):
         'household': household,
         'household_members': household_members,
         'can_manage_members': can_manage_members,
+        'is_household_owner': is_household_owner,
         'form': form
     })
 

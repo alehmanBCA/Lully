@@ -109,7 +109,11 @@
             <h3>Family access</h3>
             <p>Use this invite code to let trusted family members view and follow the same baby profiles.</p>
             {% if household %}
-              <div class="household-code">{{ household.join_code }}</div>
+              {% if is_household_owner %}
+                <div class="household-code">{{ household.join_code }}</div>
+              {% else %}
+                <div class="household-code household-code--empty">Only the household owner can share the invite code.</div>
+              {% endif %}
               <div class="household-meta">{{ household_members|length }} member{{ household_members|length|pluralize }} in this family</div>
             {% else %}
               <div class="household-code household-code--empty">Create a baby profile first to generate a share code.</div>

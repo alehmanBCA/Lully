@@ -27,9 +27,12 @@
       {% if user.is_staff %}
         <a class="site-nav__link" href="{% url 'admin_dashboard' %}">Admin</a>
       {% endif %}
-      <a class="site-nav__icon-link" href="{% url 'logout' %}" title="Logout" aria-label="Logout">
-        <img class="site-nav__icon" src="{% static 'images/logout.png' %}" alt="Logout">
-      </a>
+      <form method="post" action="{% url 'logout' %}" style="margin: 0;">
+        {% csrf_token %}
+        <button class="site-nav__icon-link" type="submit" title="Logout" aria-label="Logout">
+          <img class="site-nav__icon" src="{% static 'images/logout.png' %}" alt="Logout">
+        </button>
+      </form>
     {% else %}
       <a class="site-nav__link" href="{% url 'login' %}">Login</a>
       <a class="site-nav__link" href="{% url 'signup' %}">Sign Up</a>

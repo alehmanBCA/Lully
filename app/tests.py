@@ -34,12 +34,34 @@ class HouseholdSharingTests(TestCase):
 		)
 
 		self.assertEqual(response.status_code, 200)
-		self.assertContains(response, self.household.join_code)
+		self.assertNotContains(response, self.household.join_code)
+		self.assertContains(response, 'Only the household owner can share the invite code.')
 		self.assertContains(response, 'Mia')
 
 		membership = HouseholdMember.objects.get(user=self.grandma)
 		self.assertEqual(membership.household, self.household)
 		self.assertEqual(membership.role, 'viewer')
+
+	def test_owner_sees_household_join_code(self):
+		self.client.force_login(self.owner)
+		response = self.client.get(reverse('profile'))
+
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, self.household.join_code)
+
+	def test_join_code_accepts_formatted_input(self):
+		self.client.force_login(self.grandma)
+		formatted = f"  {self.household.join_code[:4]}-{self.household.join_code[4:]}  "
+
+		response = self.client.post(
+			reverse('profile'),
+			{'action': 'join_household', 'join_code': formatted},
+			follow=True,
+		)
+
+		self.assertEqual(response.status_code, 200)
+		membership = HouseholdMember.objects.get(user=self.grandma)
+		self.assertEqual(membership.household, self.household)
 
 	def test_non_member_cannot_open_monitor(self):
 		self.client.force_login(self.stranger)

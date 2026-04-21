@@ -16,6 +16,9 @@ urlpatterns = [
     path('baby/<int:baby_id>/logs/', views.baby_logs, name='baby_logs'),
     path('api/baby/<int:baby_id>/timeline/', views.baby_timeline_api),
     path('api/quick-log/<int:baby_id>/', views.quick_log, name='quick_log'),
+    path('api/baby/<int:baby_id>/feeding/save/', views.save_detailed_feeding, name='save_detailed_feeding'),
+    path('api/baby/<int:baby_id>/diaper/detailed-save/', views.save_detailed_diaper, name='save_detailed_diaper'),
+    path('api/baby/<int:baby_id>/sleep/detailed-save/', views.save_detailed_sleep, name='save_detailed_sleep'),
     
     path('monitor/<int:baby_id>/', views.monitor_dashboard, name='monitor_dashboard'),
     path('api/baby/<int:baby_id>/vitals/', views.api_latest_vitals, name='api_vitals'),

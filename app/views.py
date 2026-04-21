@@ -15,8 +15,7 @@ from .models import SleepSession
 from django.http import JsonResponse
 import json
 from django.views.decorators.csrf import csrf_exempt
-from .models import SleepSession, Baby, HealthReading, DeviceStatus, DailyUserStat, Feeding
-
+from .models import SleepSession, Baby, HealthReading, DeviceStatus, DailyUserStat, Feeding, DiaperLog
 
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
@@ -400,21 +399,46 @@ def get_weight_percentile(weight):
     else:
         return 90
 
+# @login_required
+# def baby_logs(request, baby_id):
+#     baby = get_object_or_404(Baby, id=baby_id, parent=request.user)
+
+#     next_nap = calculate_next_nap(baby)
+#     last_feed = Feeding.objects.filter(baby=baby).order_by('-time').first()
+#     percentile = get_weight_percentile(baby.weight_kg)
+
+#     return render(request, 'baby_logs.html', {
+#         'baby': baby,
+#         'next_nap': next_nap,
+#         'last_feed': last_feed,
+#         'percentile': percentile
+#     })
 @login_required
 def baby_logs(request, baby_id):
     baby = get_object_or_404(Baby, id=baby_id, parent=request.user)
-
-    # Calculate metrics
     next_nap = calculate_next_nap(baby)
-    last_feed = Feeding.objects.filter(baby=baby).order_by('-time').first()
-    percentile = get_weight_percentile(baby.weight_kg)
+    
+    feeding_history = Feeding.objects.filter(baby=baby).order_by('-time')[:5]
 
     return render(request, 'baby_logs.html', {
         'baby': baby,
         'next_nap': next_nap,
-        'last_feed': last_feed,
-        'percentile': percentile
+        'feeding_history': feeding_history,
     })
+
+@csrf_exempt
+@login_required
+def save_detailed_feeding(request, baby_id):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        baby = get_object_or_404(Baby, id=baby_id, parent=request.user)
+        
+        Feeding.objects.create(
+            baby=baby,
+            side=data.get('side'),
+            duration=data.get('duration')
+        )
+        return JsonResponse({'status': 'success'})
 
 def calculate_next_nap(baby):
     last_sleep = SleepSession.objects.filter(
@@ -473,3 +497,48 @@ def quick_log(request, baby_id):
         pass
 
     return JsonResponse({"status": "ok"})
+
+@csrf_exempt
+def save_detailed_diaper(request, baby_id):
+    if request.method == 'POST':
+        baby = get_object_or_404(Baby, id=baby_id)
+        data = json.loads(request.body)
+        
+        # Parse the datetime-local string (format: YYYY-MM-DDTHH:MM)
+        time_str = data.get('time')
+        log_time = datetime.strptime(time_str, '%Y-%m-%dT%H:%M')
+        
+        DiaperLog.objects.create(
+            baby=baby,
+            time=log_time,
+            type=data.get('type')
+        )
+        return JsonResponse({'status': 'ok'})
+    
+@csrf_exempt
+def save_detailed_sleep(request, baby_id):
+    if request.method == 'POST':
+        baby = get_object_or_404(Baby, id=baby_id)
+        data = json.loads(request.body)
+        
+        # Parse the datetime string for when they fell asleep
+        time_str = data.get('time')
+        if time_str:
+            start_time = datetime.strptime(time_str, '%Y-%m-%dT%H:%M')
+        else:
+            start_time = datetime.now()
+            
+        duration = data.get('duration', 0)
+        position = data.get('position', 'Back')
+        
+        # Calculate end_time based on duration if duration exists
+        end_time = start_time + timedelta(minutes=duration) if duration > 0 else None
+
+        SleepSession.objects.create(
+            baby=baby,
+            start_time=start_time,
+            end_time=end_time,
+            duration=duration,
+            position=position
+        )
+        return JsonResponse({'status': 'ok'})

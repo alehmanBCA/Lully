@@ -52,49 +52,34 @@
 
         <div id="timeline" data-api-url="/api/baby/{{ baby.id }}/timeline/" style="position: relative; margin:20px 0; height:50px; background:#eee; border-radius:10px; overflow: hidden;"></div>
 
-        <!-- <div class="quick-actions" data-api-url="/api/quick-log/{{ baby.id }}/">
-            {% with api_url='/api/quick-log/'|add:baby.id|add:'/' %}
-                <button onclick="quickLog('feed', '{{ api_url }}')">🍼 Feed Now</button>
-                <button onclick="quickLog('sleep', '{{ api_url }}')">😴 Start Sleep</button>
-                <button onclick="quickLog('diaper', '{{ api_url }}')">🧷 Diaper</button>
-            {% endwith %}
-        </div> -->
 
         <div class="log-grid">
-            <a href="#" class="log-card">
+            <div class="log-card" onclick="openPanel('Sleep', '😴', 'sleep-panel')">
                 <div class="card-header">
                     <span class="icon">😴</span>
                     <h3>Sleep</h3>
                 </div>
-                <div class="card-stats">
-                    <div>Next Nap: <span>{{ next_nap|time:"g:i A"|default:"--" }}</span></div>
-                    <div>Status: <span>Awake</span></div>
-                </div>
-            </a>
+            </div>
 
-            <a href="#" class="log-card">
+            <div class="log-card" onclick="openPanel('Feeding', '🍼', 'feeding-panel')">
                 <div class="card-header">
                     <span class="icon">🍼</span>
                     <h3>Feeding</h3>
                 </div>
                 <div class="card-stats">
-                    <div>Last Side: <span>{{ last_feed.get_side_display|default:"--" }}</span></div>
-                    <div>Time: <span>{{ last_feed.time|time:"g:i A"|default:"--" }}</span></div>
+                    <div>Last: <span>{% if last_feed %}{{ last_feed.time|date:"h:i A" }} ({{ last_feed.get_side_display }}){% else %}No data{% endif %}</span></div>
+                    <div>Daily Total: <span>{{ feeding_count }}</span></div>
                 </div>
-            </a>
+            </div>
 
-            <a href="#" class="log-card">
+            <div class="log-card" onclick="openPanel('Diaper', '🧷', 'diaper-panel')">
                 <div class="card-header">
                     <span class="icon">🧷</span>
                     <h3>Diaper</h3>
                 </div>
-                <div class="card-stats">
-                    <div>Last Change: <span>--</span></div>
-                    <div>Status: <span>--</span></div>
-                </div>
-            </a>
+            </div>
 
-            <a href="#" class="log-card">
+            <div class="log-card" onclick="openPanel('Growth', '🌟')">
                 <div class="card-header">
                     <span class="icon">🌟</span>
                     <h3>Growth</h3>
@@ -103,9 +88,9 @@
                     <div>Weight: <span>{{ baby.weight_kg|default:"--" }} kg</span></div>
                     <div>Percentile: <span>{{ percentile }}th</span></div>
                 </div>
-            </a>
+            </div>
 
-            <a href="#" class="log-card">
+            <div class="log-card">
                 <div class="card-header">
                     <span class="icon">📊</span>
                     <h3>Reports</h3>
@@ -113,9 +98,9 @@
                 <div class="card-stats">
                     <div>View Daily Summaries</div>
                 </div>
-            </a>
+            </div>
             
-            <a href="#" class="log-card">
+            <div class="log-card" onclick="openPanel('Medical', '🏥')">
                 <div class="card-header">
                     <span class="icon">🏥</span>
                     <h3>Medical</h3>
@@ -123,7 +108,134 @@
                 <div class="card-stats">
                     <div>Temp/Meds Tracker</div>
                 </div>
-            </a>
+            </div>
+        </div>
+    </div> 
+    
+    <div id="panelOverlay" class="panel-overlay" onclick="closePanel()"></div>
+    <div id="slidePanel" class="slide-panel">
+        
+        <div class="panel-header">
+            <h2 id="panelTitle">Log</h2>
+            <button class="close-btn" onclick="closePanel()">&times;</button>
+        </div>
+        
+        <div class="panel-content">
+            <div id="sleep-panel" class="panel-section" style="display: none;">
+                <div class="timer-section" style="text-align: center; margin-bottom: 25px; background: #f0f7ff; padding: 20px; border-radius: 15px;">
+                    <div id="sleep-timer-display" style="font-size: 48px; font-weight: bold; color: #03446F; font-family: monospace;">00:00</div>
+                    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
+                        <button id="start-sleep-timer" class="btn" style="background:#4da6ff; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer;">Start</button>
+                        <button id="stop-sleep-timer" class="btn" style="background:#FF4D4D; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer;" disabled>Stop</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Time Fell Asleep:</label>
+                    <input type="datetime-local" id="sleep-start-time" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label>Sleep Position:</label>
+                    <div class="diaper-type-selector" id="sleep-position-selector">
+                        <button class="diaper-type-btn active" onclick="setSleepPosition('Back', this)">
+                            <span class="btn-icon">🛌</span> Back
+                        </button>
+                        <button class="diaper-type-btn" onclick="setSleepPosition('Belly', this)">
+                            <span class="btn-icon">🧸</span> Belly
+                        </button>
+                        <button class="diaper-type-btn" onclick="setSleepPosition('Side', this)">
+                            <span class="btn-icon">🌙</span> Side
+                        </button>
+                    </div>
+                </div>
+                
+                <button onclick="saveDetailedSleep('{{ baby.id }}')" class="save-btn">Save Sleep Log</button>
+                
+                <div class="history-section" style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px;">
+                    <h4 style="margin-bottom: 10px; color: #03446F;">Recent Sleep History</h4>
+                    <ul style="list-style: none; padding: 0; font-size: 14px; color: #666;">
+                        {% for sleep in sleep_history %}
+                        <li style="padding: 8px 0; border-bottom: 1px solid #f9f9f9;">
+                            {{ sleep.start_time|date:"M d, h:i A" }} — {{ sleep.position }} ({{ sleep.duration }}m)
+                        </li>
+                        {% empty %}
+                        <li>No sleep logs recorded today.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div id="feeding-panel" class="panel-section" style="display: none;">
+                <div class="timer-section" style="text-align: center; margin-bottom: 20px;">
+                    <div id="timer-display" style="font-size: 48px; font-weight: bold; color: #03446F; font-variant-numeric: tabular-nums;">00:00</div>
+                    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
+                        <button id="start-timer" class="btn" style="background:#4da6ff; color:white; border:none; padding:10px 20px; border-radius:8px;">Start</button>
+                        <button id="stop-timer" class="btn" style="background:#FF4D4D; color:white; border:none; padding:10px 20px; border-radius:8px;" disabled>Stop</button>
+                    </div>
+                </div>
+                
+                <div class="side-selector" style="margin-bottom: 20px;">
+                    <label style="display:block; font-weight:600; margin-bottom:8px;">Side:</label>
+                    <select id="feeding-side" class="form-control">
+                        <option value="L">Left Side</option>
+                        <option value="R">Right Side</option>
+                        <option value="B">Both</option>
+                    </select>
+                </div>
+                
+                <button onclick="saveFeeding('{{ baby.id }}')" class="save-btn">Save Feeding</button>
+                
+                <div class="history-section" style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px;">
+                    <h4 style="margin-bottom: 10px; color: #03446F;">Recent Feeding History</h4>
+                    <ul style="list-style: none; padding: 0; font-size: 14px; color: #666;">
+                        {% for feed in feeding_history %}
+                        <li style="padding: 8px 0; border-bottom: 1px solid #f9f9f9;">
+                            {{ feed.time|date:"M d, h:i A" }} — {{ feed.get_side_display }} ({{ feed.duration }}m)
+                        </li>
+                        {% empty %}
+                        <li>No feeding logs recorded yet today.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            
+            <div id="diaper-panel" class="panel-section" style="display: none;">
+                <div class="form-group">
+                    <label>Time of Change:</label>
+                    <input type="datetime-local" id="diaper-time" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label>Type:</label>
+                    <div class="diaper-type-selector">
+                        <button class="diaper-type-btn" onclick="setDiaperType('Wet', this)">
+                            <span class="btn-icon">💧</span> Wet
+                        </button>
+                        <button class="diaper-type-btn" onclick="setDiaperType('Dirty', this)">
+                            <span class="btn-icon">💩</span> Dirty
+                        </button>
+                        <button class="diaper-type-btn active" onclick="setDiaperType('Both', this)">
+                            <span class="btn-icon">✨</span> Both
+                        </button>
+                    </div>
+                </div>
+                
+                <button onclick="saveDetailedDiaper('{{ baby.id }}')" class="save-btn">Save Diaper Log</button>
+                
+                <div class="history-section" style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px;">
+                    <h4 style="margin-bottom: 10px; color: #03446F;">Recent Diaper History</h4>
+                    <ul style="list-style: none; padding: 0; font-size: 14px; color: #666;">
+                        {% for diaper in diaper_history %}
+                        <li style="padding: 8px 0; border-bottom: 1px solid #f9f9f9;">
+                            {{ diaper.time|date:"M d, h:i A" }} — {{ diaper.type }}
+                        </li>
+                        {% empty %}
+                        <li>No diaper logs recorded yet today.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
     <script src="{% static 'js/baby_logs.js' %}" defer></script>

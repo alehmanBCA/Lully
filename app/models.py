@@ -48,7 +48,14 @@ class SleepSession(models.Model):
     baby = models.ForeignKey(Baby, on_delete=models.CASCADE)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField(null=True, blank=True)
-    quality_score = models.IntegerField(default=100)
+    
+    POSITION_CHOICES = [
+        ('Back', 'Back'),
+        ('Belly', 'Belly'),
+        ('Side', 'Side'),
+    ]
+    position = models.CharField(max_length=10, choices=POSITION_CHOICES, default='Back')
+    duration = models.IntegerField(null=True, blank=True, help_text="Duration in minutes")
 
 class Feeding(models.Model):
     baby = models.ForeignKey(Baby, on_delete=models.CASCADE)
@@ -60,6 +67,20 @@ class Feeding(models.Model):
         ('B', 'Both'),
     ]
     side = models.CharField(max_length=1, choices=SIDE_CHOICES)
+    duration = models.IntegerField(null=True, blank=True, help_text="Duration in minutes")
+
+class DiaperLog(models.Model):
+    baby = models.ForeignKey(Baby, on_delete=models.CASCADE, related_name='diapers')
+    time = models.DateTimeField()
+    TYPE_CHOICES = [
+        ('Wet', 'Wet'),
+        ('Dirty', 'Dirty'),
+        ('Both', 'Both'),
+    ]
+    type = models.CharField(max_length=10, choices=TYPE_CHOICES)
+
+    class Meta:
+        ordering = ['-time']
 
 class DeviceStatus(models.Model):
     baby = models.OneToOneField(Baby, on_delete=models.CASCADE)

@@ -5,6 +5,20 @@ html, body {
     margin: 0;
     font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
     background: #f3fbff;
+    overflow-x: hidden;
+}
+
+/* Use border-box everywhere to avoid padding/border from increasing element width
+   which commonly causes horizontal overflow on small viewports. */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+/* Make images and media responsive so they can't push past the viewport */
+img, picture, video, svg {
+    max-width: 100%;
+    height: auto;
+    display: block;
 }
 
 .site-nav {
@@ -1524,6 +1538,24 @@ body.dashboard-page .landing-nav {
     background: #fafafa;
 }
 
+/* Keep the nav visually aligned with the main content boxes by constraining
+   its inner width. This centers the nav and prevents it from visually
+   stretching beyond the cards below. On very small screens it will be fluid. */
+.landing-shell .landing-nav {
+    width: 100%;
+    max-width: 980px; /* match dashboard content width */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media (max-width: 980px) {
+    .landing-shell .landing-nav {
+        max-width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+    }
+}
+
 body.dashboard-page .brand-logo {
     width: 70px;
     height: 70px;
@@ -2064,4 +2096,15 @@ body.auth-page .error-messages {
         min-width: 0;
         white-space: nowrap;
     }
+}
+
+/* Extra small screens: reduce large paddings and button padding to avoid overflow */
+@media (max-width: 420px) {
+    .landing-shell { padding: 10px; margin: 8px; }
+    .landing-nav { padding: 8px; }
+    .dashboard-shell { padding-left: 8px; padding-right: 8px; }
+    .dash-primary-btn, .dash-cta-btn, .hero-primary, .hero-secondary { padding: 10px 14px; }
+    .hero-grid { gap: 12px; }
+    .feature-grid { gap: 12px; }
+    .cta-panel p, .hero-subtitle { max-width: 100%; }
 }

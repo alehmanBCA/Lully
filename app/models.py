@@ -3,6 +3,41 @@ import secrets
 from django.db import models
 from django.conf import settings
 
+class Community(models.Model):
+    creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='created_communities')
+    
+    name = models.CharField(max_length=150, unique=True)
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    members = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, 
+        through='CommunityMember', 
+        related_name='joined_communities'
+    )
+
+    def __str__(self):
+        return self.name
+
+
+class CommunityMember(models.Model):
+    ROLE_CHOICES = [
+        ('admin', 'Admin'),
+        ('moderator', 'Moderator'),
+        ('member', 'Member'),
+    ]
+
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='member')
+    joined_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = ('community', 'user')
+
+    def __str__(self):
+        return f"{self.user.username} in {self.community.name} ({self.role})"
 
 class Household(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='owned_households')

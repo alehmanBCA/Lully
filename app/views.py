@@ -472,10 +472,6 @@ def remove_household_member(request, member_id):
         messages.error(request, 'No household found.')
         return redirect('profile')
 
-    if not can_manage_household(request.user, household):
-        messages.error(request, 'Only household owners can remove members.')
-        return redirect('profile')
-
     membership = get_object_or_404(
         HouseholdMember.objects.select_related('user'),
         id=member_id,
@@ -483,17 +479,26 @@ def remove_household_member(request, member_id):
         is_active=True,
     )
 
-    if membership.user_id == request.user.id:
-        messages.error(request, 'You cannot remove yourself.')
+    is_self_remove = membership.user_id == request.user.id
+
+    if not is_self_remove and not can_manage_household(request.user, household):
+        messages.error(request, 'Only household owners can remove members.')
         return redirect('profile')
 
     if membership.role == 'owner' or membership.user_id == household.owner_id:
-        messages.error(request, 'Owner accounts cannot be removed.')
+        if is_self_remove:
+            messages.error(request, 'Household owners cannot leave their own household.')
+        else:
+            messages.error(request, 'Owner accounts cannot be removed.')
         return redirect('profile')
 
     membership.is_active = False
     membership.save(update_fields=['is_active'])
-    messages.success(request, f"Removed {membership.user.get_username()} from the household.")
+
+    if is_self_remove:
+        messages.success(request, 'You left the household.')
+    else:
+        messages.success(request, f"Removed {membership.user.get_username()} from the household.")
     return redirect('profile')
 
 @login_required

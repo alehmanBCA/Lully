@@ -2,18 +2,15 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <link rel="stylesheet" href="{% static 'css/monitor.css' %}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
+<body class="monitor-page">
     {% include 'nav/site_nav.html' %}
     <div class="monitor-container">
         <header class="monitor-header">
-            <a href="{% url 'profile' %}" class="exit-btn">
-                <span class="exit-icon">✕</span>
-                <span>Exit Monitor</span>
-            </a>
-            
             <div class="baby-meta">
                 <h1>{{ baby.name }}</h1>
                 <div class="status-pill">
@@ -25,27 +22,6 @@
 
         <div class="vitals-grid">
             <div class="vital-card hr">
-                <h3>Heart Rate</h3>
-                <div class="value-row">
-                    <span id="live-hr" class="large-val">--</span>
-                    <span class="unit">BPM</span>
-                </div>
-                <div class="pulse-icon">❤️</div>
-            </div>
-        <div class="vitals-grid">
-            <div class="vital-card hr">
-                <div class="card-header">
-                    <h3>Heart Rate</h3>
-                    <span class="icon">❤️</span>
-                </div>
-                <div class="value-row">
-                    <span id="live-hr" class="large-val">--</span>
-                    <span class="unit">BPM</span>
-                </div>
-                <div class="pulse-icon">❤️</div>
-            </div>
-        <div class="vitals-grid">
-            <div class="vital-card hr">
                 <div class="card-header">
                     <h3>Heart Rate</h3>
                     <span class="icon">❤️</span>
@@ -68,58 +44,30 @@
             </div>
         </div>
 
-        <div class="chart-container">
-            <div class="chart-header">
-                <h3>Heart Rate History</h3>
-                <span class="time-range">Last 20 readings</span>
-            </div>
-            <canvas id="hrChart"></canvas>
-        </div>
-        
-        <div class="chart-container">
-            <div class="chart-header">
-                <h3>Temperature History</h3>
-            </div>
-            <canvas id="tempChart"></canvas>
-        </div>
-    </div>
-            <div class="vital-card temp">
-                <div class="card-header">
-                    <h3>Temperature</h3>
-                    <span class="icon">🌡️</span>
+        <div class="chart-grid">
+            <section class="chart-container" aria-label="Heart rate history">
+                <div class="chart-header">
+                    <h3>Heart Rate History</h3>
+                    <span class="time-range">Last 20 readings</span>
                 </div>
-                <div class="value-row">
-                    <span id="live-temp" class="large-val">--</span>
-                    <span class="unit">°F</span>
+                <canvas id="hrChart"></canvas>
+            </section>
+
+            <section class="chart-container" aria-label="Temperature history">
+                <div class="chart-header">
+                    <h3>Temperature History</h3>
+                    <span class="time-range">Last 20 readings</span>
                 </div>
-                <div class="pulse-icon">🌡️</div>
-            </div>
+                <canvas id="tempChart"></canvas>
+            </section>
         </div>
 
-        <div class="chart-container">
-            <div class="chart-header">
-                <h3>Heart Rate History</h3>
-                <span class="time-range">Last 20 readings</span>
-            </div>
-            <canvas id="hrChart"></canvas>
-        </div>
-        
-        <div class="chart-container">
-            <div class="chart-header">
-                <h3>Temperature History</h3>
-            </div>
-            <canvas id="tempChart"></canvas>
-        </div>
-    </div>
-            <div class="vital-card temp">
-                <h3>Temperature</h3>
-                <div class="value-row">
-                    <span id="live-temp" class="large-val">--</span>
-                    <span class="unit">°F</span>
-                </div>
-                <div class="pulse-icon">🌡️</div>
-            </div>
-        </div>
+        <footer class="monitor-footer">
+            <a href="{% url 'profile' %}" class="exit-btn">
+                <span class="exit-icon">✕</span>
+                <span>Exit Monitor</span>
+            </a>
+        </footer>
     </div>
 
     <script>

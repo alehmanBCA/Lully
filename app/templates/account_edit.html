@@ -19,6 +19,15 @@
     <main class="content">
       <section class="edit-panel">
         <h2>Edit Account</h2>
+        {% if messages %}
+          <div class="account-notice-stack" role="status" aria-live="polite">
+            {% for message in messages %}
+              <div class="account-notice account-notice--{{ message.tags|default:'info' }}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
         <form method="post" enctype="multipart/form-data">
           {% csrf_token %}
           <div class="form-row">

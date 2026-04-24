@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import Baby, Household, HouseholdMember, Post
+from .models import Baby, Household, HouseholdMember, Post, UserPreference
 
 
 class HouseholdSharingTests(TestCase):
@@ -121,6 +121,27 @@ class HouseholdSharingTests(TestCase):
 		membership.refresh_from_db()
 		self.assertFalse(membership.is_active)
 
+	def test_member_can_leave_household(self):
+		HouseholdMember.objects.create(household=self.household, user=self.grandma, role='viewer')
+		membership = HouseholdMember.objects.get(user=self.grandma)
+
+		self.client.force_login(self.grandma)
+		response = self.client.post(reverse('remove_household_member', args=[membership.id]), follow=True)
+
+		self.assertEqual(response.status_code, 200)
+		membership.refresh_from_db()
+		self.assertFalse(membership.is_active)
+
+	def test_owner_cannot_leave_household(self):
+		owner_membership = HouseholdMember.objects.get(user=self.owner)
+
+		self.client.force_login(self.owner)
+		response = self.client.post(reverse('remove_household_member', args=[owner_membership.id]), follow=True)
+
+		self.assertEqual(response.status_code, 200)
+		owner_membership.refresh_from_db()
+		self.assertTrue(owner_membership.is_active)
+
 	def test_non_owner_cannot_remove_member(self):
 		HouseholdMember.objects.create(household=self.household, user=self.grandma, role='viewer')
 		membership = HouseholdMember.objects.get(user=self.grandma)
@@ -176,5 +197,11 @@ class HouseholdSharingTests(TestCase):
 		self.assertEqual(preference.default_max_heart_rate, 145)
 		self.assertAlmostEqual(preference.default_min_temperature, 36.4)
 		self.assertAlmostEqual(preference.default_max_temperature, 37.8)
+		self.assertEqual(preference.temperature_unit, 'f')
+		self.assertEqual(preference.weight_unit, 'lb')
+
+	def test_new_user_preference_defaults_to_fahrenheit_and_pounds(self):
+		preference, _ = UserPreference.objects.get_or_create(user=self.stranger)
+
 		self.assertEqual(preference.temperature_unit, 'f')
 		self.assertEqual(preference.weight_unit, 'lb')

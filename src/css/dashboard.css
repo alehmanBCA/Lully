@@ -1814,6 +1814,10 @@ body.dashboard-page .page-footer {
     font-weight: 600;
 }
 
+.mobile-landing-screen {
+    display: none;
+}
+
 body.auth-page {
     display: grid;
     place-items: center;
@@ -2078,6 +2082,30 @@ body.auth-page .error-messages {
         padding: 22px;
     }
 
+    body.auth-login-page .auth-shell,
+    body.auth-signup-page .auth-shell {
+        width: min(100%, 460px);
+        grid-template-columns: 1fr;
+        padding: 12px;
+    }
+
+    body.auth-login-page .auth-spotlight,
+    body.auth-signup-page .auth-spotlight {
+        display: none;
+    }
+
+    body.auth-login-page .auth-card,
+    body.auth-signup-page .auth-card {
+        border-radius: 20px;
+        padding: 20px;
+    }
+
+    body.auth-login-page .auth-card h2,
+    body.auth-signup-page .auth-card h2 {
+        font-size: 28px;
+        margin-bottom: 16px;
+    }
+
     .hero-actions,
     .landing-actions {
         width: 100%;
@@ -2108,3 +2136,450 @@ body.auth-page .error-messages {
     .feature-grid { gap: 12px; }
     .cta-panel p, .hero-subtitle { max-width: 100%; }
 }
+
+/* Mobile-first landing polish: optimize the dashboard for phones and tablets.
+   This keeps the content calm, readable, and tap-friendly when the app is used
+   mostly on smaller screens. */
+@media (max-width: 900px) {
+    .dashboard-shell {
+        width: 100%;
+        padding: 20px 8px 28px;
+    }
+
+    .landing-shell {
+        width: min(100%, calc(100% - 16px));
+        margin: 10px auto 14px;
+        padding: 10px;
+        border-radius: 26px;
+    }
+
+    .landing-nav {
+        display: none;
+    }
+
+    .brand-mark {
+        flex: 1 1 auto;
+        min-width: 0;
+        justify-content: flex-start;
+    }
+
+    .brand-logo {
+        width: 54px;
+        height: 54px;
+        border-radius: 16px;
+        flex: 0 0 auto;
+    }
+
+    .brand-copy strong {
+        font-size: 20px;
+    }
+
+    .brand-copy small {
+        font-size: 10px;
+        letter-spacing: 0.11em;
+    }
+
+    .landing-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: auto;
+        flex: 0 0 auto;
+    }
+
+    .landing-actions > * {
+        width: auto;
+        justify-content: center;
+        text-align: center;
+        min-height: 40px;
+        padding: 0 12px;
+        border-radius: 999px;
+    }
+
+    .landing-actions .admin-link {
+        display: none;
+    }
+
+    .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        margin-bottom: 14px;
+    }
+
+    .hero-copy {
+        order: 2;
+        padding: 14px;
+        border-radius: 22px;
+    }
+
+    .hero-preview {
+        order: 1;
+    }
+
+    .hero-title {
+        max-width: none;
+        margin: 8px 0 10px;
+        font-size: clamp(28px, 8.8vw, 38px);
+        line-height: 1.02;
+        letter-spacing: -0.04em;
+    }
+
+    .hero-subtitle {
+        max-width: none;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    .hero-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        margin-top: 14px;
+    }
+
+    .hero-primary,
+    .hero-secondary,
+    .cta-button {
+        width: 100%;
+        min-height: 48px;
+        padding: 0 16px;
+        justify-content: center;
+        border-radius: 14px;
+    }
+
+    .hero-secondary {
+        background: rgba(255,255,255,0.9);
+    }
+
+    .hero-preview {
+        display: block;
+    }
+
+    .preview-card {
+        max-width: none;
+        padding: 16px;
+        border-radius: 22px;
+    }
+
+    .preview-head {
+        gap: 12px;
+        padding-bottom: 14px;
+    }
+
+    .preview-logo {
+        width: 48px;
+        height: 48px;
+    }
+
+    .preview-head p {
+        font-size: 11px;
+        letter-spacing: 0.12em;
+    }
+
+    .preview-head strong {
+        font-size: 18px;
+    }
+
+    .preview-metric {
+        margin-top: 12px;
+        padding: 14px;
+        border-radius: 16px;
+    }
+
+    .metric-label {
+        font-size: 11px;
+    }
+
+    .preview-metric strong {
+        font-size: 28px;
+    }
+
+    .preview-note {
+        margin-top: 12px;
+        padding: 14px;
+        border-radius: 16px;
+        font-size: 14px;
+    }
+
+    .feature-grid,
+    .trust-panel,
+    .page-footer {
+        display: none;
+    }
+
+    .cta-panel {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 18px;
+        border-radius: 20px;
+    }
+
+    .cta-panel h2 {
+        max-width: none;
+        font-size: clamp(24px, 7vw, 34px);
+    }
+
+    .cta-panel p {
+        font-size: 14px;
+        line-height: 1.5;
+        max-width: none;
+    }
+
+    .cta-button {
+        min-height: 54px;
+    }
+
+    .mobile-landing-screen {
+        display: grid;
+        gap: 14px;
+        margin-bottom: 18px;
+    }
+
+    .mobile-app-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 6px 2px 0;
+    }
+
+    .mobile-app-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+    }
+
+    .mobile-app-logo {
+        width: 50px;
+        height: 50px;
+        border-radius: 16px;
+        object-fit: contain;
+        flex: 0 0 auto;
+    }
+
+    .mobile-app-brand strong {
+        display: block;
+        color: var(--dash-text);
+        font-size: 20px;
+        line-height: 1.1;
+    }
+
+    .mobile-app-brand span {
+        display: block;
+        color: #6b8194;
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+    }
+
+    .mobile-app-link {
+        text-decoration: none;
+        color: #154464;
+        font-weight: 800;
+        font-size: 13px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(209, 241, 255, 0.9);
+        border: 1px solid #c6e3ef;
+        white-space: nowrap;
+    }
+
+    .mobile-hero-card {
+        border-radius: 26px;
+        padding: 16px;
+        background: #ffffff;
+        border: 2px solid #e3ebf3;
+        box-shadow: 0 18px 40px rgba(18, 60, 98, 0.08);
+    }
+
+    .mobile-kicker {
+        margin: 0;
+        color: #4c6b84;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+    }
+
+    .mobile-title {
+        margin: 8px 0 8px;
+        color: var(--dash-text);
+        font-size: clamp(26px, 8vw, 34px);
+        line-height: 1.05;
+        letter-spacing: -0.04em;
+    }
+
+    .mobile-subtitle {
+        margin: 0;
+        color: var(--dash-muted);
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    .mobile-hero-card,
+    .mobile-bottom-panel,
+    .mobile-mini-grid {
+        width: 100%;
+    }
+
+    .mobile-stat-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 14px;
+    }
+
+    .mobile-stat-pill {
+        padding: 12px;
+        border-radius: 20px;
+        background: #f7fbff;
+        border: 1px solid #e4edf5;
+        display: grid;
+        gap: 4px;
+    }
+
+    .mobile-stat-pill span {
+        color: #6b8194;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+
+    .mobile-stat-pill strong {
+        color: #0f4a78;
+        font-size: 22px;
+        line-height: 1;
+    }
+
+    .mobile-primary-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 54px;
+        margin-top: 14px;
+        border-radius: 16px;
+        text-decoration: none;
+        background: linear-gradient(135deg, #1f9bf0, #1a85d8);
+        color: #fff;
+        font-weight: 800;
+        box-shadow: 0 12px 26px rgba(26,133,216,0.24);
+    }
+
+    .mobile-mini-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .mobile-mini-card {
+        padding: 12px 10px;
+        border-radius: 16px;
+        background: #fafafa;
+        border: 1px solid #e3ebf3;
+        box-shadow: none;
+        display: grid;
+        gap: 5px;
+        min-height: 84px;
+        align-content: start;
+    }
+
+    .mobile-mini-card span {
+        color: #5a7085;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .mobile-mini-card strong {
+        color: #123e67;
+        font-size: 15px;
+        line-height: 1.1;
+    }
+
+    .mobile-bottom-panel {
+        display: grid;
+        gap: 10px;
+    }
+
+    .mobile-bottom-card {
+        padding: 16px;
+        border-radius: 20px;
+        background: #ffffff;
+        border: 1px solid #e3ebf3;
+        box-shadow: 0 10px 24px rgba(18, 60, 98, 0.06);
+        display: grid;
+        gap: 8px;
+    }
+
+    .mobile-bottom-card span {
+        color: #5a7085;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+
+    .mobile-bottom-card p {
+        margin: 0;
+        color: var(--dash-text);
+        line-height: 1.55;
+        font-size: 14px;
+    }
+
+    .mobile-bottom-card--accent {
+        background: #dff3ff;
+    }
+
+    .mobile-secondary-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 48px;
+        text-decoration: none;
+        border-radius: 14px;
+        background: #ffffff;
+        border: 1px solid #c6e3ef;
+        color: #154464;
+        font-weight: 800;
+    }
+
+    .hero-grid,
+    .feature-grid,
+    .trust-panel,
+    .cta-panel,
+    .page-footer {
+        display: none;
+    }
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .feature-flip {
+        transform: none !important;
+        transition: none;
+    }
+
+    .feature-card:hover .feature-flip,
+    .feature-card:focus .feature-flip,
+    .feature-card:focus-within .feature-flip,
+    .feature-card:active .feature-flip {
+        transform: none;
+    }
+
+    .hero-primary:hover,
+    .hero-secondary:hover,
+    .nav-button:hover,
+    .cta-button:hover,
+    .auth-btn:hover {
+        transform: none;
+        box-shadow: none;
+    }
+}
+
+

@@ -78,8 +78,8 @@ class UserPreference(models.Model):
     default_max_heart_rate = models.IntegerField(default=160)
     default_min_temperature = models.FloatField(default=36.0)
     default_max_temperature = models.FloatField(default=38.0)
-    temperature_unit = models.CharField(max_length=1, choices=TEMPERATURE_UNIT_CHOICES, default='c')
-    weight_unit = models.CharField(max_length=2, choices=WEIGHT_UNIT_CHOICES, default='kg')
+    temperature_unit = models.CharField(max_length=1, choices=TEMPERATURE_UNIT_CHOICES, default='f')
+    weight_unit = models.CharField(max_length=2, choices=WEIGHT_UNIT_CHOICES, default='lb')
     visible_metrics = models.JSONField(default=dict, blank=True)
 
     def __str__(self):

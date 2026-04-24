@@ -84,6 +84,7 @@ function openPanel(categoryTitle, iconHtml, panelId) {
     if (activeSection) {
         activeSection.style.display = 'block';
         if (panelId === 'sleep-panel') setDefaultSleepTime();
+        if (panelId === 'growth-panel') setDefaultGrowthTime();
     }
 
     slidePanel.classList.add('active');
@@ -101,30 +102,91 @@ function closePanel() {
     
 }
 
-document.getElementById('start-timer')?.addEventListener('click', () => {
-    const startBtn = document.getElementById('start-timer');
-    const stopBtn = document.getElementById('stop-timer');
+// document.getElementById('start-timer')?.addEventListener('click', () => {
+//     const startBtn = document.getElementById('start-timer');
+//     const stopBtn = document.getElementById('stop-timer');
     
-    startBtn.disabled = true;
-    stopBtn.disabled = false;
+//     startBtn.disabled = true;
+//     stopBtn.disabled = false;
 
-    timerInterval = setInterval(() => {
-        secondsElapsed++;
-        const mins = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
-        const secs = String(secondsElapsed % 60).padStart(2, '0');
-        document.getElementById('timer-display').textContent = `${mins}:${secs}`;
-    }, 1000);
-});
+//     timerInterval = setInterval(() => {
+//         secondsElapsed++;
+//         const mins = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
+//         const secs = String(secondsElapsed % 60).padStart(2, '0');
+//         document.getElementById('timer-display').textContent = `${mins}:${secs}`;
+//     }, 1000);
+// });
 
-document.getElementById('stop-timer')?.addEventListener('click', () => {
-    clearInterval(timerInterval);
-    document.getElementById('start-timer').disabled = false;
-    document.getElementById('stop-timer').disabled = true;
-});
+// document.getElementById('stop-timer')?.addEventListener('click', () => {
+//     clearInterval(timerInterval);
+//     document.getElementById('start-timer').disabled = false;
+//     document.getElementById('stop-timer').disabled = true;
+// });
+
+// function saveFeeding(babyId) {
+//     const duration = Math.round(secondsElapsed / 60);
+//     const side = document.getElementById('feeding-side').value;
+
+//     fetch(`/api/baby/${babyId}/feeding/save/`, {
+//         method: 'POST',
+//         headers: {
+//             'Content-Type': 'application/json',
+//             'X-CSRFToken': getCookie('csrftoken')
+//         },
+//         body: JSON.stringify({ duration, side })
+//     }).then(res => {
+//         if (res.ok) {
+//             location.reload();
+//         } else {
+//             console.error('Failed to save feeding data');
+//         }
+//     });
+// }
+
+let timerInterval = null;
+let secondsElapsed = 0;
+let selectedFeedingSide = 'B';
+
+function setFeedingSide(side, element) {
+    selectedFeedingSide = side;
+    
+    const parent = element.closest('#feeding-side-selector');
+    parent.querySelectorAll('.feeding-btn').forEach(btn => btn.classList.remove('active'));
+    
+    element.classList.add('active');
+}
+
+// 2. Timer Functionality
+function toggleTimer() {
+    const timerDisplay = document.getElementById('timer-display');
+    const timerBtn = document.getElementById('timer-btn');
+    
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        if(timerBtn) timerBtn.innerText = "Start Timer";
+    } else {
+        if(timerBtn) timerBtn.innerText = "Stop Timer";
+        timerInterval = setInterval(() => {
+            secondsElapsed++;
+            const mins = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
+            const secs = String(secondsElapsed % 60).padStart(2, '0');
+            if(timerDisplay) timerDisplay.innerText = `${mins}:${secs}`;
+        }, 1000);
+    }
+}
 
 function saveFeeding(babyId) {
-    const duration = Math.round(secondsElapsed / 60);
-    const side = document.getElementById('feeding-side').value;
+    const timeInput = document.getElementById('feeding-time'); 
+    
+    // Calculate local time for the user's location
+    const now = new Date();
+    const timezoneOffset = now.getTimezoneOffset() * 60000;
+    const localDateTime = new Date(now.getTime() - timezoneOffset).toISOString().slice(0, 16); 
+
+    const timeToSave = (timeInput && timeInput.value) ? timeInput.value : localDateTime;
+    const duration = Math.round(secondsElapsed / 60); 
+    const side = selectedFeedingSide;
 
     fetch(`/api/baby/${babyId}/feeding/save/`, {
         method: 'POST',
@@ -132,28 +194,49 @@ function saveFeeding(babyId) {
             'Content-Type': 'application/json',
             'X-CSRFToken': getCookie('csrftoken')
         },
-        body: JSON.stringify({ duration, side })
+        body: JSON.stringify({ 
+            time: timeToSave, 
+            duration: duration, 
+            side: side 
+        })
     }).then(res => {
         if (res.ok) {
             location.reload();
-        } else {
-            console.error('Failed to save feeding data');
         }
     });
 }
 
-let selectedDiaperType = 'Both';
 
-function setDiaperType(type, element) {
-    selectedDiaperType = type;
-    document.querySelectorAll('.diaper-type-btn').forEach(btn => btn.classList.remove('active'));
+
+// Keep track of the selections
+let selectedDiaperStatus = 'Pee';
+let selectedDiaperColor = 'Yellow';
+
+function setDiaperStatus(status, element) {
+    selectedDiaperStatus = status;
+    const container = document.getElementById('diaper-status-selector');
+    container.querySelectorAll('.status-btn').forEach(btn => btn.classList.remove('active'));
+    element.classList.add('active');
+    
+    const colorSection = document.getElementById('diaper-color-section');
+    if (status === 'Clean') {
+        colorSection.style.display = 'none';
+        selectedDiaperColor = null;
+    } else {
+        colorSection.style.display = 'block';
+    }
+}
+
+function setDiaperColor(color, element) {
+    selectedDiaperColor = color;
+    const container = document.getElementById('diaper-color-selector');
+    container.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('active'));
     element.classList.add('active');
 }
 
-function saveDetailedDiaper(babyId) {
+function saveDiaper(babyId) {
     const timeInput = document.getElementById('diaper-time').value;
-    const time = timeInput ? timeInput : new Date().toISOString().slice(0, 16);
-    const type = selectedDiaperType;
+    const time = timeInput || new Date().toISOString().slice(0, 16);
 
     fetch(`/api/baby/${babyId}/diaper/detailed-save/`, {
         method: 'POST',
@@ -161,15 +244,49 @@ function saveDetailedDiaper(babyId) {
             'Content-Type': 'application/json',
             'X-CSRFToken': getCookie('csrftoken')
         },
-        body: JSON.stringify({ time, type })
+        body: JSON.stringify({ 
+            time: time,
+            status: selectedDiaperStatus,
+            color: selectedDiaperColor
+        })
     }).then(res => {
         if (res.ok) {
-            location.reload();
+            location.reload(); 
         } else {
-            alert('Failed to save diaper log');
+            alert("Error saving diaper log.");
         }
     });
 }
+
+
+// let selectedDiaperType = 'Both';
+
+// function setDiaperType(type, element) {
+//     selectedDiaperType = type;
+//     document.querySelectorAll('.diaper-type-btn').forEach(btn => btn.classList.remove('active'));
+//     element.classList.add('active');
+// }
+
+// function saveDetailedDiaper(babyId) {
+//     const timeInput = document.getElementById('diaper-time').value;
+//     const time = timeInput ? timeInput : new Date().toISOString().slice(0, 16);
+//     const type = selectedDiaperType;
+
+//     fetch(`/api/baby/${babyId}/diaper/detailed-save/`, {
+//         method: 'POST',
+//         headers: {
+//             'Content-Type': 'application/json',
+//             'X-CSRFToken': getCookie('csrftoken')
+//         },
+//         body: JSON.stringify({ time, type })
+//     }).then(res => {
+//         if (res.ok) {
+//             location.reload();
+//         } else {
+//             alert('Failed to save diaper log');
+//         }
+//     });
+// }
 
 function setDefaultSleepTime() {
     const timeInput = document.getElementById('sleep-start-time');
@@ -180,34 +297,43 @@ function setDefaultSleepTime() {
     }
 }
 
-document.getElementById('start-sleep-timer')?.addEventListener('click', () => {
-    document.getElementById('start-sleep-timer').disabled = true;
-    document.getElementById('stop-sleep-timer').disabled = false;
-    
-    sleepTimerInterval = setInterval(() => {
-        sleepSecondsElapsed++;
-        const mins = String(Math.floor(sleepSecondsElapsed / 60)).padStart(2, '0');
-        const secs = String(sleepSecondsElapsed % 60).padStart(2, '0');
-        document.getElementById('sleep-timer-display').textContent = `${mins}:${secs}`;
-    }, 1000);
-});
+// Example of how to trigger it when a modal opens
+function openDetailedSleepModal() {
+    document.getElementById('sleep-modal').style.display = 'block';
+    setDefaultSleepTime(); // Fills in the current time right as they open it
+}
 
-document.getElementById('stop-sleep-timer')?.addEventListener('click', () => {
-    clearInterval(sleepTimerInterval);
-    document.getElementById('start-sleep-timer').disabled = false;
-    document.getElementById('stop-sleep-timer').disabled = true;
-});
+function toggleSleepTimer() {
+    const timerDisplay = document.getElementById('sleep-timer-display');
+    const timerBtn = document.getElementById('sleep-timer-btn');
+    
+    if (sleepTimerInterval) {
+        clearInterval(sleepTimerInterval);
+        sleepTimerInterval = null;
+        timerBtn.innerText = "Start Sleep Timer";
+    } else {
+        timerBtn.innerText = "Stop Sleep Timer";
+        sleepTimerInterval = setInterval(() => {
+            sleepSecondsElapsed++;
+            const mins = String(Math.floor(sleepSecondsElapsed / 60)).padStart(2, '0');
+            const secs = String(sleepSecondsElapsed % 60).padStart(2, '0');
+            timerDisplay.innerText = `${mins}:${secs}`;
+        }, 1000);
+    }
+}
 
 function setSleepPosition(position, element) {
     selectedSleepPosition = position;
-    const parent = element.closest('.diaper-type-selector');
+    const parent = element.closest('#sleep-position-selector');
     parent.querySelectorAll('.diaper-type-btn').forEach(btn => btn.classList.remove('active'));
     element.classList.add('active');
 }
 
-function saveDetailedSleep(babyId) {
-    const time = document.getElementById('sleep-start-time').value;
-    const duration = Math.round(sleepSecondsElapsed / 60);
+function saveSleep(babyId) {
+    const startTimeInput = document.getElementById('sleep-start-time');
+    // Default to current time if no start time is provided
+    const startTime = startTimeInput.value || new Date().toISOString().slice(0, 16);
+    const duration = Math.round(sleepSecondsElapsed / 60); // Duration in minutes
     const position = selectedSleepPosition;
 
     fetch(`/api/baby/${babyId}/sleep/detailed-save/`, {
@@ -216,8 +342,146 @@ function saveDetailedSleep(babyId) {
             'Content-Type': 'application/json',
             'X-CSRFToken': getCookie('csrftoken')
         },
-        body: JSON.stringify({ time, duration, position })
+        body: JSON.stringify({ 
+            start_time: startTime, 
+            duration: duration, 
+            position: position 
+        })
     }).then(res => {
-        if (res.ok) location.reload();
+        if (res.ok) {
+            location.reload(); // Refresh to show the new log in the history list
+        } else {
+            console.error('Failed to save sleep data');
+        }
+    });
+}
+
+
+// document.getElementById('start-sleep-timer')?.addEventListener('click', () => {
+//     document.getElementById('start-sleep-timer').disabled = true;
+//     document.getElementById('stop-sleep-timer').disabled = false;
+    
+//     sleepTimerInterval = setInterval(() => {
+//         sleepSecondsElapsed++;
+//         const mins = String(Math.floor(sleepSecondsElapsed / 60)).padStart(2, '0');
+//         const secs = String(sleepSecondsElapsed % 60).padStart(2, '0');
+//         document.getElementById('sleep-timer-display').textContent = `${mins}:${secs}`;
+//     }, 1000);
+// });
+
+// document.getElementById('stop-sleep-timer')?.addEventListener('click', () => {
+//     clearInterval(sleepTimerInterval);
+//     document.getElementById('start-sleep-timer').disabled = false;
+//     document.getElementById('stop-sleep-timer').disabled = true;
+// });
+
+// function setSleepPosition(position, element) {
+//     selectedSleepPosition = position;
+//     const parent = element.closest('.diaper-type-selector');
+//     parent.querySelectorAll('.diaper-type-btn').forEach(btn => btn.classList.remove('active'));
+//     element.classList.add('active');
+// }
+
+// function saveDetailedSleep(babyId) {
+//     const time = document.getElementById('sleep-start-time').value;
+//     const duration = Math.round(sleepSecondsElapsed / 60);
+//     const position = selectedSleepPosition;
+
+//     fetch(`/api/baby/${babyId}/sleep/detailed-save/`, {
+//         method: 'POST',
+//         headers: {
+//             'Content-Type': 'application/json',
+//             'X-CSRFToken': getCookie('csrftoken')
+//         },
+//         body: JSON.stringify({ time, duration, position })
+//     }).then(res => {
+//         if (res.ok) location.reload();
+//     });
+// }
+
+let currentMeasurementUnit = 'metric';
+
+function setDefaultGrowthTime() {
+    const timeInput = document.getElementById('growth-time');
+    if (timeInput && !timeInput.value) {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        timeInput.value = now.toISOString().slice(0, 16);
+    }
+}
+
+function setMeasurementUnit(unit, element) {
+    currentMeasurementUnit = unit;
+    
+    const parent = element.closest('#unit-selector');
+    parent.querySelectorAll('.diaper-type-btn').forEach(btn => btn.classList.remove('active'));
+    element.classList.add('active');
+
+    const weightLabel = document.getElementById('weight-label');
+    const lengthLabel = document.getElementById('length-label');
+    const headLabel = document.getElementById('head-label');
+
+    if (unit === 'metric') {
+        weightLabel.textContent = 'Weight (kg):';
+        lengthLabel.textContent = 'Length (cm):';
+        headLabel.textContent = 'Head Circumference (cm):';
+    } else {
+        weightLabel.textContent = 'Weight (lbs):';
+        lengthLabel.textContent = 'Length (in):';
+        headLabel.textContent = 'Head Circumference (in):';
+    }
+}
+
+function saveGrowth(babyId) {
+    const timeInput = document.getElementById('growth-time').value;
+    const time = timeInput ? timeInput : new Date().toISOString().slice(0, 16);
+    const weight = document.getElementById('growth-weight').value;
+    const length = document.getElementById('growth-length').value;
+    const headCirc = document.getElementById('growth-head').value;
+
+    if (!weight && !length && !headCirc) {
+        alert("Please enter at least one measurement before saving.");
+        return;
+    }
+
+    fetch(`/api/baby/${babyId}/growth/save/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ 
+            time: time, 
+            unit: currentMeasurementUnit,
+            weight: weight,
+            length: length,
+            head_circumference: headCirc
+        })
+    }).then(res => {
+        if (res.ok) {
+            location.reload();
+        } else {
+            console.error('Failed to save growth data');
+        }
+    });
+}
+
+function saveDailyNotes(babyId) {
+    const notesText = document.getElementById('daily-notes').value;
+
+    fetch(`/api/baby/${babyId}/note/save/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ notes: notesText })
+    }).then(res => {
+        if (res.ok) {
+            alert('Daily notes saved successfully!');
+        } else {
+            console.error('Failed to save notes');
+            alert('Failed to save notes.');
+        }
     });
 }

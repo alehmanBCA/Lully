@@ -23,6 +23,11 @@ urlpatterns = [
     path('api/baby/<int:baby_id>/feeding/save/', views.save_detailed_feeding, name='save_detailed_feeding'),
     path('api/baby/<int:baby_id>/diaper/detailed-save/', views.save_detailed_diaper, name='save_detailed_diaper'),
     path('api/baby/<int:baby_id>/sleep/detailed-save/', views.save_detailed_sleep, name='save_detailed_sleep'),
+    path('api/baby/<int:baby_id>/growth/save/', views.save_detailed_growth, name='save_detailed_growth'),
+    path('api/baby/<int:baby_id>/medical/notes/save/', views.save_medical_notes, name='save_medical_notes'),
+    path('api/baby/<int:baby_id>/medical/medication/add/', views.add_medication, name='add_medication'),
+    path('api/baby/<int:baby_id>/note/save/', views.save_daily_note, name='save_daily_note'),
+    path('baby/<int:baby_id>/report/pdf/', views.download_report_pdf, name='download_report_pdf'),
     
     path('monitor/<int:baby_id>/', views.monitor_dashboard, name='monitor_dashboard'),
     path('api/baby/<int:baby_id>/vitals/', views.api_latest_vitals, name='api_vitals'),

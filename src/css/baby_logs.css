@@ -155,10 +155,10 @@ body::before {
 } */
 .card-header h3 {
     margin: 0;
-    font-size: 16px; /* Slightly smaller font to prevent wrapping */
-    white-space: nowrap; /* Keeps the title on one line */
+    font-size: 16px;
+    white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis; /* Adds "..." if the name is too long */
+    text-overflow: ellipsis;
 }
 
 .card-stats {
@@ -173,14 +173,13 @@ body::before {
     float: right;
 }
 
-/* The dark background overlay */
 .panel-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(8, 48, 73, 0.4); /* Dark Lully Navy with transparency */
+    background: rgba(8, 48, 73, 0.4);
     backdrop-filter: blur(2px);
     z-index: 999;
     opacity: 0;
@@ -193,28 +192,26 @@ body::before {
     visibility: visible;
 }
 
-/* The actual sliding panel */
 .slide-panel {
     position: fixed;
     top: 0;
-    right: 0; /* Slides in from the right */
+    right: 0;
     width: 400px;
-    max-width: 100%; /* Ensures it fits on mobile */
+    max-width: 100%;
     height: 100%;
     background: #ffffff;
     z-index: 1000;
     box-shadow: -5px 0 25px rgba(0, 0, 0, 0.1);
-    transform: translateX(100%); /* Hidden off-screen by default */
+    transform: translateX(100%);
     transition: transform 0.3s ease-in-out;
     display: flex;
     flex-direction: column;
 }
 
 .slide-panel.active {
-    transform: translateX(0); /* Slides onto the screen */
+    transform: translateX(0);
 }
 
-/* Panel Header */
 .panel-header {
     display: flex;
     justify-content: space-between;
@@ -246,7 +243,6 @@ body::before {
     color: #03446F;
 }
 
-/* Panel Content and Form Elements */
 .panel-content {
     padding: 25px;
     overflow-y: auto;
@@ -298,7 +294,6 @@ body::before {
     background: #022d4a;
 }
 
-/* baby_logs.css */
 .diaper-type-selector {
     display: flex;
     gap: 10px;
@@ -330,6 +325,95 @@ body::before {
 
 .diaper-type-btn .btn-icon {
     font-size: 20px;
+}
+
+/* Diaper Status Buttons */
+.diaper-status-container {
+    display: flex;
+    gap: 10px;
+}
+.status-btn {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid #d1e3f0;
+    border-radius: 8px;
+    background: white;
+    color: #03446F;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.status-btn.active {
+    background: #e0f2ff;
+    border-color: #03446F;
+    box-shadow: 0 2px 8px rgba(3, 68, 111, 0.1);
+}
+
+/* Diaper Color Selectors */
+.color-selector {
+    display: flex;
+    gap: 15px;
+}
+.color-btn {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.color-btn.active {
+    border: 3px solid #03446F;
+    transform: scale(1.15);
+}
+
+/* Specific Colors */
+.bg-yellow { background-color: #FDE047; }
+.bg-brown { background-color: #8B4513; }
+.bg-green { background-color: #4ADE80; }
+.bg-red { background-color: #EF4444; }
+.bg-black { background-color: #1F2937; }
+
+/* Feeding Side Buttons */
+.feeding-side-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.feeding-btn {
+    flex: 1;
+    padding: 15px 10px;
+    border: 2px solid #d1e3f0;
+    border-radius: 12px;
+    background: white;
+    cursor: pointer;
+    font-weight: 600;
+    color: #03446F;
+    transition: all 0.2s ease;
+    text-align: center;
+    font-size: 16px;
+}
+
+.feeding-btn.circle-btn {
+    flex: none; /* Prevents the circle from stretching */
+    width: 75px;
+    height: 75px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.feeding-btn.active {
+    background: #e0f2ff;
+    border-color: #03446F;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(3, 68, 111, 0.1);
 }
 
 @media (max-width: 768px) {

@@ -20,7 +20,11 @@ from .models import SleepSession
 from django.http import JsonResponse
 import json
 from django.views.decorators.csrf import csrf_exempt
-from .models import SleepSession, Baby, HealthReading, DeviceStatus, DailyUserStat, Feeding, DiaperLog
+from .models import SleepSession, Baby, HealthReading, DeviceStatus, DailyUserStat, Feeding, DiaperLog, GrowthLog, Medication, DailyNote
+from django.template.loader import render_to_string
+from django.http import HttpResponse, JsonResponse
+from weasyprint import HTML
+from datetime import date
 
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
@@ -441,7 +445,8 @@ def profile(request):
 
     name = user.first_name or user.get_username()
     
-    babies = get_accessible_babies(user)
+    # babies = get_accessible_babies(user)
+    babies = Baby.objects.filter(parent=request.user)
     form = BabyForm()
     household_members = HouseholdMember.objects.none()
     can_manage_members = False
@@ -805,12 +810,16 @@ def baby_logs(request, baby_id):
     baby = get_object_or_404(Baby, id=baby_id, parent=request.user)
     next_nap = calculate_next_nap(baby)
     
+    sleep_history = SleepSession.objects.filter(baby=baby).order_by('-start_time')[:5]
     feeding_history = Feeding.objects.filter(baby=baby).order_by('-time')[:5]
+    diaper_history = DiaperLog.objects.filter(baby=baby).order_by('-time')[:5]
 
     return render(request, 'baby_logs.html', {
         'baby': baby,
         'next_nap': next_nap,
+        'sleep_history': sleep_history,
         'feeding_history': feeding_history,
+        'diaper_history': diaper_history,
     })
 
 @csrf_exempt
@@ -886,46 +895,132 @@ def quick_log(request, baby_id):
     return JsonResponse({"status": "ok"})
 
 @csrf_exempt
+@login_required
 def save_detailed_diaper(request, baby_id):
     if request.method == 'POST':
         baby = get_object_or_404(Baby, id=baby_id)
         data = json.loads(request.body)
         
-        # Parse the datetime-local string (format: YYYY-MM-DDTHH:MM)
+        # Parse the time string from JS
         time_str = data.get('time')
-        log_time = datetime.strptime(time_str, '%Y-%m-%dT%H:%M')
-        
+        if time_str:
+            # Handle standard local datetime string from HTML5 input
+            log_time = datetime.strptime(time_str, '%Y-%m-%dT%H:%M')
+        else:
+            log_time = datetime.now()
+            
+        # Create the log with the new fields
         DiaperLog.objects.create(
             baby=baby,
             time=log_time,
-            type=data.get('type')
+            status=data.get('status', 'Pee'),
+            color=data.get('color', '')
         )
+        
         return JsonResponse({'status': 'ok'})
     
+
 @csrf_exempt
+@login_required
 def save_detailed_sleep(request, baby_id):
     if request.method == 'POST':
         baby = get_object_or_404(Baby, id=baby_id)
         data = json.loads(request.body)
         
-        # Parse the datetime string for when they fell asleep
-        time_str = data.get('time')
-        if time_str:
-            start_time = datetime.strptime(time_str, '%Y-%m-%dT%H:%M')
-        else:
-            start_time = datetime.now()
-            
-        duration = data.get('duration', 0)
-        position = data.get('position', 'Back')
+        # Parse the start time
+        start_time_str = data.get('start_time')
+        start_time = datetime.strptime(start_time_str, '%Y-%m-%dT%H:%M')
         
-        # Calculate end_time based on duration if duration exists
-        end_time = start_time + timedelta(minutes=duration) if duration > 0 else None
-
+        # Create the sleep session
         SleepSession.objects.create(
             baby=baby,
             start_time=start_time,
-            end_time=end_time,
-            duration=duration,
-            position=position
+            duration=data.get('duration', 0),
+            position=data.get('position', 'Back')
+        )
+        
+        return JsonResponse({'status': 'ok'})
+    
+@csrf_exempt
+def save_detailed_growth(request, baby_id):
+    if request.method == 'POST':
+        baby = get_object_or_404(Baby, id=baby_id)
+        data = json.loads(request.body)
+        
+        time_str = data.get('time')
+        log_time = datetime.strptime(time_str, '%Y-%m-%dT%H:%M') if time_str else datetime.now()
+        
+        GrowthLog.objects.create(
+            baby=baby,
+            time=log_time,
+            unit=data.get('unit', 'metric'),
+            weight=data.get('weight') or None,
+            length=data.get('length') or None,
+            head_circumference=data.get('head_circumference') or None
         )
         return JsonResponse({'status': 'ok'})
+    
+@csrf_exempt
+def save_medical_notes(request, baby_id):
+    if request.method == 'POST':
+        baby = get_object_or_404(Baby, id=baby_id)
+        data = json.loads(request.body)
+        
+        baby.medical_notes = data.get('notes', '')
+        baby.save()
+        
+        return JsonResponse({'status': 'ok'})
+
+@csrf_exempt
+def add_medication(request, baby_id):
+    if request.method == 'POST':
+        baby = get_object_or_404(Baby, id=baby_id)
+        data = json.loads(request.body)
+        
+        Medication.objects.create(
+            baby=baby,
+            name=data.get('name'),
+            times_per_day=data.get('times_per_day', 1),
+            days_per_week=data.get('days_per_week', 7)
+        )
+        return JsonResponse({'status': 'ok'})
+    
+@csrf_exempt
+def save_daily_note(request, baby_id):
+    if request.method == 'POST':
+        baby = get_object_or_404(Baby, id=baby_id)
+        data = json.loads(request.body)
+        
+        # Get or create today's note
+        note, created = DailyNote.objects.get_or_create(baby=baby, date=date.today())
+        note.notes = data.get('notes', '')
+        note.save()
+        
+        return JsonResponse({'status': 'ok'})
+
+# --- 2. Endpoint to generate the PDF ---
+def download_report_pdf(request, baby_id):
+    baby = get_object_or_404(Baby, id=baby_id)
+    today = date.today()
+    
+    # Gather all logs for today
+    context = {
+        'baby': baby,
+        'today': today,
+        'feedings': Feeding.objects.filter(baby=baby, time__date=today),
+        'diapers': DiaperLog.objects.filter(baby=baby, time__date=today),
+        'sleeps': SleepSession.objects.filter(baby=baby, start_time__date=today),
+        'note': DailyNote.objects.filter(baby=baby, date=today).first()
+    }
+    
+    # Render the HTML template
+    html_string = render_to_string('report_pdf.html', context)
+    
+    # Convert HTML to PDF
+    pdf_file = HTML(string=html_string).write_pdf()
+    
+    # Create the HTTP response with PDF headers
+    response = HttpResponse(pdf_file, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{baby.name}_Report_{today}.pdf"'
+    
+    return response

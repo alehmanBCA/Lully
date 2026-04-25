@@ -52,78 +52,317 @@
 
         <div id="timeline" data-api-url="/api/baby/{{ baby.id }}/timeline/" style="position: relative; margin:20px 0; height:50px; background:#eee; border-radius:10px; overflow: hidden;"></div>
 
-        <!-- <div class="quick-actions" data-api-url="/api/quick-log/{{ baby.id }}/">
-            {% with api_url='/api/quick-log/'|add:baby.id|add:'/' %}
-                <button onclick="quickLog('feed', '{{ api_url }}')">🍼 Feed Now</button>
-                <button onclick="quickLog('sleep', '{{ api_url }}')">😴 Start Sleep</button>
-                <button onclick="quickLog('diaper', '{{ api_url }}')">🧷 Diaper</button>
-            {% endwith %}
-        </div> -->
 
         <div class="log-grid">
-            <a href="#" class="log-card">
+            <div class="log-card" onclick="openPanel('Sleep', '😴', 'sleep-panel')">
                 <div class="card-header">
                     <span class="icon">😴</span>
                     <h3>Sleep</h3>
                 </div>
-                <div class="card-stats">
-                    <div>Next Nap: <span>{{ next_nap|time:"g:i A"|default:"--" }}</span></div>
-                    <div>Status: <span>Awake</span></div>
-                </div>
-            </a>
+            </div>
 
-            <a href="#" class="log-card">
+            <div class="log-card" onclick="openPanel('Feeding', '🍼', 'feeding-panel')">
                 <div class="card-header">
                     <span class="icon">🍼</span>
                     <h3>Feeding</h3>
                 </div>
                 <div class="card-stats">
-                    <div>Last Side: <span>{{ last_feed.get_side_display|default:"--" }}</span></div>
-                    <div>Time: <span>{{ last_feed.time|time:"g:i A"|default:"--" }}</span></div>
+                    <div>Last: <span>{% if last_feed %}{{ last_feed.time|date:"h:i A" }} ({{ last_feed.get_side_display }}){% else %}No data{% endif %}</span></div>
+                    <div>Daily Total: <span>{{ feeding_count }}</span></div>
                 </div>
-            </a>
+            </div>
 
-            <a href="#" class="log-card">
+            <div class="log-card" onclick="openPanel('Diaper', '🧷', 'diaper-panel')">
                 <div class="card-header">
                     <span class="icon">🧷</span>
                     <h3>Diaper</h3>
                 </div>
-                <div class="card-stats">
-                    <div>Last Change: <span>--</span></div>
-                    <div>Status: <span>--</span></div>
-                </div>
-            </a>
+            </div>
 
-            <a href="#" class="log-card">
+            <div class="log-card" onclick="openPanel('Growth', '📏', 'growth-panel')">
                 <div class="card-header">
-                    <span class="icon">🌟</span>
+                    <span class="icon">📏</span>
                     <h3>Growth</h3>
                 </div>
-                <div class="card-stats">
-                    <div>Weight: <span>{{ baby.weight_kg|default:"--" }} kg</span></div>
-                    <div>Percentile: <span>{{ percentile }}th</span></div>
-                </div>
-            </a>
+            </div>
 
-            <a href="#" class="log-card">
+            <div class="log-card" onclick="openPanel('Reports', '📊', 'report-panel')">
                 <div class="card-header">
                     <span class="icon">📊</span>
-                    <h3>Reports</h3>
+                    <h3>Today's Report</h3>
                 </div>
-                <div class="card-stats">
-                    <div>View Daily Summaries</div>
-                </div>
-            </a>
+            </div>
             
-            <a href="#" class="log-card">
+            <div class="log-card" onclick="openPanel('Medical', '⚕️', 'medical-panel')">
                 <div class="card-header">
-                    <span class="icon">🏥</span>
+                    <span class="icon">⚕️</span>
                     <h3>Medical</h3>
                 </div>
-                <div class="card-stats">
-                    <div>Temp/Meds Tracker</div>
+            </div>
+        </div>
+    </div> 
+    
+    <div id="panelOverlay" class="panel-overlay" onclick="closePanel()"></div>
+    <div id="slidePanel" class="slide-panel">
+        
+        <div class="panel-header">
+            <h2 id="panelTitle">Log</h2>
+            <button class="close-btn" onclick="closePanel()">&times;</button>
+        </div>
+        
+        <div class="panel-content">
+            <div id="sleep-panel" class="panel-section" style="display: none;">
+                <div class="timer-section" style="text-align: center; margin-bottom: 25px; background: #f0f7ff; padding: 20px; border-radius: 15px;">
+                    <div id="sleep-timer-display" style="font-size: 2.5rem; font-weight: bold; color: #03446F; text-align: center; margin: 10px 0; font-family: monospace;">00:00</div>
+                    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
+                        <button id="sleep-timer-btn" onclick="toggleSleepTimer()" class="save-btn" style="background: white; color: #03446F; border: 2px solid #d1e3f0;">Start Sleep Timer</button>
+                    </div>
                 </div>
-            </a>
+                
+                <div class="form-group">
+                    <label>Time Fell Asleep:</label>
+                    <input type="datetime-local" id="sleep-start-time" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label>Sleep Position:</label>
+                    <div class="diaper-type-selector" id="sleep-position-selector">
+                        <button class="diaper-type-btn active" onclick="setSleepPosition('Back', this)">
+                            <span class="btn-icon">🛌</span> Back
+                        </button>
+                        <button class="diaper-type-btn" onclick="setSleepPosition('Belly', this)">
+                            <span class="btn-icon">🧸</span> Belly
+                        </button>
+                        <button class="diaper-type-btn" onclick="setSleepPosition('Side', this)">
+                            <span class="btn-icon">🌙</span> Side
+                        </button>
+                    </div>
+                </div>
+                
+                <button onclick="saveSleep('{{ baby.id }}')" class="save-btn">Save Sleep Log</button>
+
+                <div class="history-section" style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px;">
+                    <h4 style="margin-bottom: 10px; color: #03446F;">Recent Sleep History</h4>
+                    <ul style="list-style: none; padding: 0; font-size: 14px; color: #666;">
+                        {% for sleep in sleep_history %}
+                        <li style="padding: 8px 0; border-bottom: 1px solid #f9f9f9;">
+                            {{ sleep.start_time|date:"M d, h:i A" }} — {{ sleep.position }} ({{ sleep.duration }}m)
+                        </li>
+                        {% empty %}
+                        <li>No sleep logs recorded today.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div id="feeding-panel" class="panel-section" style="display: none;">
+                <div class="timer-section" style="text-align: center; margin-bottom: 20px;">
+                    <div id="timer-display" style="font-size: 48px; font-weight: bold; color: #03446F; font-variant-numeric: tabular-nums;">00:00</div>
+                    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
+                        <button id="timer-btn" onclick="toggleTimer()" class="feeding-btn">Start Timer</button>
+                    </div>
+                </div>
+                
+                <div class="side-selector" style="margin-bottom: 20px;">
+                    <label style="display:block; font-weight:600; margin-bottom:8px;">Side:</label>
+                    <div class="feeding-side-container" id="feeding-side-selector">
+                        <button type="button" class="feeding-btn" onclick="setFeedingSide('L', this)">Left</button>
+                        <button type="button" class="feeding-btn circle-btn active" onclick="setFeedingSide('B', this)">Both</button>
+                        <button type="button" class="feeding-btn" onclick="setFeedingSide('R', this)">Right</button>
+                    </div>
+                </div>
+                
+                <button onclick="saveFeeding('{{ baby.id }}')" class="save-btn">Save Feeding</button>
+                
+                <div class="history-section" style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px;">
+                    <h4 style="margin-bottom: 10px; color: #03446F;">Recent Feeding History</h4>
+                    <ul style="list-style: none; padding: 0; font-size: 14px; color: #666;">
+                        {% for feed in feeding_history %}
+                        <li style="padding: 8px 0; border-bottom: 1px solid #f9f9f9;">
+                            {{ feed.time|date:"M d, h:i A" }} — {{ feed.get_side_display }} ({{ feed.duration }}m)
+                        </li>
+                        {% empty %}
+                        <li>No feeding logs recorded yet today.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            
+            <div id="diaper-panel" class="log-panel" style="display: none;">
+                <h3 style="color: #03446F; margin-bottom: 15px;">🧷 Diaper Log</h3>
+                
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 8px;">Time:</label>
+                    <input type="datetime-local" id="diaper-time" class="time-input" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #d1e3f0;">
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 8px;">Status:</label>
+                    <div class="diaper-status-container" id="diaper-status-selector">
+                        <button class="status-btn active" onclick="setDiaperStatus('Pee', this)">Pee</button>
+                        <button class="status-btn" onclick="setDiaperStatus('Poop', this)">Poop</button>
+                        <button class="status-btn" onclick="setDiaperStatus('Both', this)">Both</button>
+                        <button class="status-btn" onclick="setDiaperStatus('Clean', this)">Clean</button>
+                    </div>
+                </div>
+                
+                <div class="form-group" id="diaper-color-section" style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 8px;">Color:</label>
+                    <div class="color-selector" id="diaper-color-selector">
+                        <button class="color-btn bg-yellow active" data-color="Yellow" onclick="setDiaperColor('Yellow', this)"></button>
+                        <button class="color-btn bg-brown" data-color="Brown" onclick="setDiaperColor('Brown', this)"></button>
+                        <button class="color-btn bg-green" data-color="Green" onclick="setDiaperColor('Green', this)"></button>
+                        <button class="color-btn bg-red" data-color="Red" onclick="setDiaperColor('Red', this)"></button>
+                        <button class="color-btn bg-black" data-color="Black" onclick="setDiaperColor('Black', this)"></button>
+                    </div>
+                </div>
+                
+                <button class="save-btn" onclick="saveDiaper('{{ baby.id }}')" style="width: 100%; margin-bottom: 20px;">Save Diaper Log</button>              
+                
+                <div class="history-section">
+                    <h4 style="color: #03446F; margin-bottom: 10px;">Recent Diapers</h4>
+                    {% for diaper in diaper_history %}
+                    <div class="history-item" style="background: #f8fbff; padding: 10px; border-radius: 8px; border-left: 4px solid #03446F; margin-bottom: 8px;">
+                        <strong>{{ diaper.status }}</strong> 
+                        {% if diaper.color and diaper.status != 'Clean' %}- {{ diaper.color }}{% endif %}
+                        <span style="float: right; color: #666; font-size: 0.9em;">{{ diaper.time|date:"g:i A" }}</span>
+                    </div>
+                    {% empty %}
+                    <p style="color: #666;">No diapers logged yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div id="growth-panel" class="panel-section" style="display: none;">
+                
+                <div class="form-group">
+                    <label>Measurement System:</label>
+                    <div class="diaper-type-selector" id="unit-selector">
+                        <button type="button" class="diaper-type-btn active" onclick="setMeasurementUnit('metric', this)">
+                            Metric (kg, cm)
+                        </button>
+                        <button type="button" class="diaper-type-btn" onclick="setMeasurementUnit('imperial', this)">
+                            Imperial (lbs, in)
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Date Measured:</label>
+                    <input type="datetime-local" id="growth-time" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label id="weight-label">Weight (kg):</label>
+                    <input type="number" id="growth-weight" step="0.01" class="form-control" placeholder="e.g. 4.5">
+                </div>
+                
+                <div class="form-group">
+                    <label id="length-label">Length (cm):</label>
+                    <input type="number" id="growth-length" step="0.1" class="form-control" placeholder="e.g. 55.0">
+                </div>
+                
+                <div class="form-group">
+                    <label id="head-label">Head Circumference (cm):</label>
+                    <input type="number" id="growth-head" step="0.1" class="form-control" placeholder="e.g. 38.0">
+                </div>
+                
+                <button onclick="saveGrowth('{{ baby.id }}')" class="save-btn">Save Growth Log</button>
+                
+                <div class="history-section" style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px;">
+                    <h4 style="margin-bottom: 10px; color: #03446F;">Recent Growth Logs</h4>
+                    <ul style="list-style: none; padding: 0; font-size: 14px; color: #666;">
+                        {% for growth in growth_history %}
+                        <li style="padding: 8px 0; border-bottom: 1px solid #f9f9f9;">
+                            <strong>{{ growth.time|date:"M d, Y" }}:</strong> 
+                            {% if growth.weight %}{{ growth.weight }} {% if growth.unit == 'metric' %}kg{% else %}lbs{% endif %}{% endif %}
+                            {% if growth.length %} | {{ growth.length }} {% if growth.unit == 'metric' %}cm{% else %}in{% endif %}{% endif %}
+                        </li>
+                        {% empty %}
+                        <li>No growth logs recorded yet.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            
+            <div id="medical-panel" class="panel-section" style="display: none;">
+                
+                <div class="form-group">
+                    <label style="color: #03446F;">Important Medical Facts & Baselines:</label>
+                    <p style="font-size: 12px; color: #666; margin-top: -5px; margin-bottom: 8px;">Log known allergies, higher baseline temperatures, or heart rate norms.</p>
+                    <textarea id="medical-facts" class="form-control" rows="4" placeholder="e.g. Baby has a slightly faster heartbeat than average...">{{ baby.medical_notes|default_if_none:"" }}</textarea>
+                    <button onclick="saveMedicalFacts('{{ baby.id }}')" class="btn" style="margin-top: 10px; background: #88A9C0; color: white; padding: 10px 15px; border-radius: 8px; border: none; cursor: pointer; width: 100%;">Save Facts</button>
+                </div>
+                
+                <hr style="border: 0; border-top: 2px dashed #d1e3f0; margin: 25px 0;">
+                
+                <h4 style="color: #03446F; margin-bottom: 15px;">Required Medications</h4>
+                
+                <ul style="list-style: none; padding: 0; margin-bottom: 20px;">
+                    {% for med in baby.medications.all %}
+                    <li style="background: white; padding: 12px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #d1e3f0; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong style="color: #083049; font-size: 16px;">{{ med.name }}</strong><br>
+                            <small style="color: #666;">{{ med.times_per_day }} times a day • {{ med.days_per_week }} days a week</small>
+                        </div>
+                        <span style="font-size: 24px;">💊</span>
+                    </li>
+                    {% empty %}
+                    <li style="color: #88A9C0; font-size: 14px; text-align: center; padding: 10px;">No medications currently tracked.</li>
+                    {% endfor %}
+                </ul>
+                
+                <div style="background: #e0f2ff; padding: 15px; border-radius: 12px;">
+                    <h4 style="margin-top: 0; margin-bottom: 15px; color: #03446F;">+ Add Medicine</h4>
+                    
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label>Medicine Name:</label>
+                        <input type="text" id="med-name" class="form-control" placeholder="e.g. Amoxicillin">
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <div class="form-group" style="flex: 1; margin-bottom: 10px;">
+                            <label>Times a Day:</label>
+                            <input type="number" id="med-times-day" class="form-control" value="1" min="1">
+                        </div>
+                        <div class="form-group" style="flex: 1; margin-bottom: 10px;">
+                            <label>Days a Week:</label>
+                            <input type="number" id="med-days-week" class="form-control" value="7" min="1" max="7">
+                        </div>
+                    </div>
+                    
+                    <button onclick="addMedication('{{ baby.id }}')" class="save-btn" style="margin-top: 5px;">Save Medicine</button>
+                </div>
+            </div>
+            
+            <div id="report-panel" class="panel-section" style="display: none;">
+                
+                <div style="background: #e0f2ff; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                    <h4 style="margin-top: 0; color: #03446F;">📝 Daily Notes</h4>
+                    <textarea id="daily-notes" class="form-control" rows="5" placeholder="Write any notes, moods, or observations about today...">{% for note in baby.daily_notes.all %}{% if note.date == today %}{{ note.notes }}{% endif %}{% endfor %}</textarea>
+                    <button onclick="saveDailyNotes('{{ baby.id }}')" class="save-btn" style="margin-top: 10px;">Save Notes</button>
+                </div>
+                
+                <h4 style="color: #03446F; margin-bottom: 15px;">Summary for Today</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 30px;">
+                    <div style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #d1e3f0; text-align: center;">
+                        <div style="font-size: 24px;">🍼</div>
+                        <strong>Feedings</strong>
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #d1e3f0; text-align: center;">
+                        <div style="font-size: 24px;">🧷</div>
+                        <strong>Diapers</strong>
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #d1e3f0; text-align: center;">
+                        <div style="font-size: 24px;">😴</div>
+                        <strong>Naps</strong>
+                    </div>
+                </div>
+                
+                <a href="{% url 'download_report_pdf' baby.id %}" class="save-btn" style="display: block; text-align: center; text-decoration: none; background: #28a745;">
+                    📄 Download Today's PDF Report
+                </a>
+            </div>
         </div>
     </div>
     <script src="{% static 'js/baby_logs.js' %}" defer></script>

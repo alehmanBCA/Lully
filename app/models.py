@@ -3,6 +3,41 @@ import secrets
 from django.db import models
 from django.conf import settings
 
+class Community(models.Model):
+    creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='created_communities')
+    
+    name = models.CharField(max_length=150, unique=True)
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    members = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, 
+        through='CommunityMember', 
+        related_name='joined_communities'
+    )
+
+    def __str__(self):
+        return self.name
+
+
+class CommunityMember(models.Model):
+    ROLE_CHOICES = [
+        ('admin', 'Admin'),
+        ('moderator', 'Moderator'),
+        ('member', 'Member'),
+    ]
+
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='member')
+    joined_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = ('community', 'user')
+
+    def __str__(self):
+        return f"{self.user.username} in {self.community.name} ({self.role})"
 
 class Household(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='owned_households')
@@ -47,7 +82,6 @@ class Baby(models.Model):
     
     name = models.CharField(max_length=100)
     parent = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    household = models.ForeignKey(Household, on_delete=models.SET_NULL, null=True, blank=True, related_name='babies')
     birth_date = models.DateField()
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True)
     weight_kg = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
@@ -57,10 +91,12 @@ class Baby(models.Model):
     min_heart_rate = models.IntegerField(default=60)
     max_heart_rate = models.IntegerField(default=160)
     min_oxygen_level = models.IntegerField(default=90)
+    
+    # NEW: Medical facts field
+    medical_notes = models.TextField(blank=True, null=True, help_text="Important medical facts like higher temperature baseline")
 
     def __str__(self):
         return self.name
-
 
 class UserPreference(models.Model):
     TEMPERATURE_UNIT_CHOICES = [
@@ -156,7 +192,14 @@ class SleepSession(models.Model):
     baby = models.ForeignKey(Baby, on_delete=models.CASCADE)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField(null=True, blank=True)
-    quality_score = models.IntegerField(default=100)
+    
+    POSITION_CHOICES = [
+        ('Back', 'Back'),
+        ('Belly', 'Belly'),
+        ('Side', 'Side'),
+    ]
+    position = models.CharField(max_length=10, choices=POSITION_CHOICES, default='Back')
+    duration = models.IntegerField(null=True, blank=True, help_text="Duration in minutes")
 
 class Feeding(models.Model):
     baby = models.ForeignKey(Baby, on_delete=models.CASCADE)
@@ -168,6 +211,59 @@ class Feeding(models.Model):
         ('B', 'Both'),
     ]
     side = models.CharField(max_length=1, choices=SIDE_CHOICES)
+    duration = models.IntegerField(null=True, blank=True, help_text="Duration in minutes")
+
+class DiaperLog(models.Model):
+    baby = models.ForeignKey(Baby, on_delete=models.CASCADE)
+    time = models.DateTimeField()
+    status = models.CharField(max_length=20, default='Pee') # e.g., Pee, Poop, Both, Clean
+    color = models.CharField(max_length=20, blank=True, null=True) # e.g., Yellow, Brown, Green
+
+    class Meta:
+        ordering = ['-time']
+
+    def __str__(self):
+        return f"{self.status} for {self.baby.name} at {self.time}"
+
+class GrowthLog(models.Model):
+    baby = models.ForeignKey(Baby, on_delete=models.CASCADE, related_name='growth_logs')
+    time = models.DateTimeField()
+    
+    UNIT_CHOICES = [
+        ('metric', 'Metric (kg, cm)'),
+        ('imperial', 'Imperial (lbs, in)'),
+    ]
+    unit = models.CharField(max_length=10, choices=UNIT_CHOICES, default='metric')
+    
+    weight = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    length = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    head_circumference = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+
+    class Meta:
+        ordering = ['-time']
+
+# NEW: Add this to the bottom of the file
+class Medication(models.Model):
+    baby = models.ForeignKey(Baby, on_delete=models.CASCADE, related_name='medications')
+    name = models.CharField(max_length=150)
+    times_per_day = models.IntegerField(default=1)
+    days_per_week = models.IntegerField(default=7)
+
+    class Meta:
+        ordering = ['-id'] # Shows newest added first
+
+class DailyNote(models.Model):
+    baby = models.ForeignKey(Baby, on_delete=models.CASCADE, related_name='daily_notes')
+    date = models.DateField(auto_now_add=True)
+    notes = models.TextField(blank=True, null=True)
+
+    class Meta:
+        # Ensures only one note exists per baby per day
+        unique_together = ('baby', 'date') 
+        ordering = ['-date']
+
+    def __str__(self):
+        return f"Notes for {self.baby.name} on {self.date}"
 
 class DeviceStatus(models.Model):
     baby = models.OneToOneField(Baby, on_delete=models.CASCADE)

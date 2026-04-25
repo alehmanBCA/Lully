@@ -1198,13 +1198,38 @@ body.auth-page::before {
     font-size: 16px;
 }
 
+.hero-primary,
+.mobile-primary-action {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    cursor: pointer;
+    transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 260ms ease, filter 260ms ease, background 260ms ease, color 260ms ease, border-color 260ms ease;
+    will-change: transform;
+}
+
+.hero-primary:hover,
+.hero-primary:focus-visible,
+.mobile-primary-action:hover,
+.mobile-primary-action:focus-visible {
+    transform: translateY(-2px) scale(1.015);
+    box-shadow: 0 14px 24px rgba(26,133,216,0.18);
+    filter: brightness(1.01);
+}
+
+.hero-primary:active,
+.mobile-primary-action:active {
+    transform: translateY(-1px) scale(0.998);
+    box-shadow: 0 9px 18px rgba(26,133,216,0.14);
+}
+
 .hero-primary:hover,
 .hero-secondary:hover,
 .nav-button:hover,
 .cta-button:hover,
 .auth-btn:hover {
-    transform: translateY(-2px) scale(1.01);
-    box-shadow: 0 18px 34px rgba(26,133,216,0.28);
+    transform: translateY(-3px) scale(1.015);
+    box-shadow: 0 16px 30px rgba(26,133,216,0.22);
 }
 
 .hero-primary:active,
@@ -1589,13 +1614,18 @@ body.dashboard-page .cta-button {
     box-shadow: none;
 }
 
+body.dashboard-page .hero-primary {
+    position: relative;
+    transform: translateY(0);
+}
+
 body.dashboard-page .nav-button:hover,
 body.dashboard-page .hero-primary:hover,
 body.dashboard-page .cta-button:hover {
     background: #c2eaf9;
     color: #113a58;
-    box-shadow: none;
-    transform: none;
+    box-shadow: 0 14px 24px rgba(26, 133, 216, 0.16);
+    transform: translateY(-2px) scale(1.015);
 }
 
 body.dashboard-page .nav-button:active,
@@ -1603,15 +1633,32 @@ body.dashboard-page .hero-primary:active,
 body.dashboard-page .cta-button:active {
     background: #afe0f5;
     color: #102f4a;
-    box-shadow: none;
-    transform: none;
+    box-shadow: 0 8px 14px rgba(26, 133, 216, 0.11);
+    transform: translateY(-1px) scale(0.998);
 }
 
 body.dashboard-page .hero-primary,
 body.dashboard-page .hero-secondary,
 body.dashboard-page .nav-button,
 body.dashboard-page .cta-button {
-    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    transition: background 0.26s ease, color 0.26s ease, border-color 0.26s ease, box-shadow 260ms ease, transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+body.dashboard-page .hero-secondary,
+body.dashboard-page .mobile-secondary-action {
+    transition: background 280ms ease, color 280ms ease, border-color 280ms ease, box-shadow 280ms ease, transform 280ms ease;
+}
+
+body.dashboard-page .hero-secondary:hover,
+body.dashboard-page .mobile-secondary-action:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px rgba(12, 46, 73, 0.08);
+}
+
+body.dashboard-page .hero-secondary:active,
+body.dashboard-page .mobile-secondary-action:active {
+    transform: translateY(0);
+    box-shadow: none;
 }
 
 body.dashboard-page .hero-grid {
@@ -2467,7 +2514,20 @@ body.auth-page .error-messages {
         background: linear-gradient(135deg, #1f9bf0, #1a85d8);
         color: #fff;
         font-weight: 800;
-        box-shadow: 0 12px 26px rgba(26,133,216,0.24);
+        box-shadow: 0 12px 24px rgba(26,133,216,0.2);
+        transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 260ms ease, filter 260ms ease;
+    }
+
+    .mobile-primary-action:hover,
+    .mobile-primary-action:focus-visible {
+        transform: translateY(-2px) scale(1.01);
+        box-shadow: 0 14px 24px rgba(26,133,216,0.18);
+        filter: brightness(1.01);
+    }
+
+    .mobile-primary-action:active {
+        transform: translateY(-1px) scale(0.998);
+        box-shadow: 0 9px 18px rgba(26,133,216,0.14);
     }
 
     .mobile-mini-grid {
@@ -2548,6 +2608,7 @@ body.auth-page .error-messages {
         border: 1px solid #c6e3ef;
         color: #154464;
         font-weight: 800;
+        transition: background 280ms ease, color 280ms ease, border-color 280ms ease, box-shadow 280ms ease, transform 280ms ease;
     }
 
     .hero-grid,

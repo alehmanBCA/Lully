@@ -82,6 +82,7 @@ class Baby(models.Model):
     
     name = models.CharField(max_length=100)
     parent = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    household = models.ForeignKey(Household, on_delete=models.SET_NULL, null=True, blank=True, related_name='babies')
     birth_date = models.DateField()
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True)
     weight_kg = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)

@@ -445,8 +445,7 @@ def profile(request):
 
     name = user.first_name or user.get_username()
     
-    # babies = get_accessible_babies(user)
-    babies = Baby.objects.filter(parent=request.user)
+    babies = get_accessible_babies(user)
     form = BabyForm()
     household_members = HouseholdMember.objects.none()
     can_manage_members = False

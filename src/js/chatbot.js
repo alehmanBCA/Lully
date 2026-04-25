@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
       minScore: 2,
       keywords: ['lully', 'about', 'what', 'can', 'do', 'features', 'purpose', 'app', 'site', 'platform'],
       patterns: [/what\s+is\s+lully/i, /about\s+lully/i, /what\s+can.*lully/i, /who\s+are\s+you/i, /what\s+does\s+lully\s+do/i],
-      answer: 'Lully is a baby-monitoring web app. You can create baby profiles, open each baby monitor dashboard, and track heart rate, oxygen, temperature, and sleep in one place.'
+      answer: 'Lully is a baby-monitoring web app. You can create baby profiles, open each baby monitor dashboard, and track heart rate and temperature in one place.'
     },
     {
       id: 'bot-capabilities',
@@ -86,14 +86,14 @@ document.addEventListener('DOMContentLoaded', () => {
     {
       id: 'monitor',
       minScore: 2,
-      keywords: ['monitor', 'reading', 'heart', 'oxygen', 'temperature', 'sleep', 'stats', 'vitals', 'dashboard'],
-      patterns: [/monitor/i, /heart\s*rate/i, /oxygen/i, /temperature/i, /sleep/i, /vitals?/i, /readings?/i],
-      answer: 'Open a baby card and click View Monitor. You can see heart rate, oxygen, baby temperature, room temperature, and sleep status there.'
+      keywords: ['monitor', 'reading', 'heart', 'temperature', 'stats', 'vitals', 'dashboard'],
+      patterns: [/monitor/i, /heart\s*rate/i, /temperature/i, /vitals?/i, /readings?/i],
+      answer: 'Open a baby card and click View Monitor. You can see heart rate and baby temperature there.'
     },
     {
       id: 'monitor-meaning',
       minScore: 3,
-      keywords: ['mean', 'means', 'normal', 'high', 'low', 'reading', 'heart', 'oxygen', 'temperature', 'sleep'],
+      keywords: ['mean', 'means', 'normal', 'high', 'low', 'reading', 'heart', 'temperature'],
       patterns: [/what\s+does.*mean/i, /is.*normal/i, /too\s+high/i, /too\s+low/i],
       answer: 'I can explain where to find each monitor value, but I cannot give medical advice. For interpretation of normal or abnormal values, please contact a qualified healthcare professional.'
     },

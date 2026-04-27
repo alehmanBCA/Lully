@@ -27,15 +27,15 @@
         <section class="auth-card">
         <h2>Login</h2>
         {% if messages %}
-        <div class="error-messages">
-            <ul>
             {% for message in messages %}
-                {% if 'error' in message.tags %}
-                <li>{{ message }}</li>
+                {% if 'error' in message.tags and message %}
+                <div class="error-messages">
+                    <ul>
+                        <li>{{ message }}</li>
+                    </ul>
+                </div>
                 {% endif %}
             {% endfor %}
-            </ul>
-        </div>
         {% endif %}
         <form method="post" class="auth-form">
             {% csrf_token %}

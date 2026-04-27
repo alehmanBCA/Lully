@@ -70,6 +70,13 @@ document.addEventListener('DOMContentLoaded', () => {
       answer: 'I can help with Lully navigation and tasks: creating baby profiles, opening monitor pages, reading monitor metrics, updating account info, logging in/signing up, and troubleshooting common issues.'
     },
     {
+      id: 'thanks',
+      minScore: 2,
+      keywords: ['thanks', 'thank', 'appreciate', 'helpful', 'great', 'nice'],
+      patterns: [/^thanks?$/i, /^thank\s+you$/i, /thanks\s+lully/i, /thank\s+you\s+lully/i, /appreciate\s+it/i],
+      answer: 'You’re welcome. I’m happy to help anytime.'
+    },
+    {
       id: 'add-baby',
       minScore: 2,
       keywords: ['add', 'create', 'new', 'baby', 'profile', 'child', 'infant'],

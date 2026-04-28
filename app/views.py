@@ -25,6 +25,7 @@ from django.template.loader import render_to_string
 from django.http import HttpResponse, JsonResponse
 from weasyprint import HTML
 from datetime import date
+from datetime import datetime
 
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
@@ -791,20 +792,7 @@ def get_weight_percentile(weight):
     else:
         return 90
 
-# @login_required
-# def baby_logs(request, baby_id):
-#     baby = get_object_or_404(Baby, id=baby_id, parent=request.user)
 
-#     next_nap = calculate_next_nap(baby)
-#     last_feed = Feeding.objects.filter(baby=baby).order_by('-time').first()
-#     percentile = get_weight_percentile(baby.weight_kg)
-
-#     return render(request, 'baby_logs.html', {
-#         'baby': baby,
-#         'next_nap': next_nap,
-#         'last_feed': last_feed,
-#         'percentile': percentile
-#     })
 @login_required
 def baby_logs(request, baby_id):
     baby = get_object_or_404(Baby, id=baby_id, parent=request.user)
@@ -813,6 +801,9 @@ def baby_logs(request, baby_id):
     sleep_history = SleepSession.objects.filter(baby=baby).order_by('-start_time')[:5]
     feeding_history = Feeding.objects.filter(baby=baby).order_by('-time')[:5]
     diaper_history = DiaperLog.objects.filter(baby=baby).order_by('-time')[:5]
+    growth_history = GrowthLog.objects.filter(baby=baby).order_by('-time')[:5]
+    medical_notes_history = DailyNote.objects.filter(baby=baby).order_by('-date')[:10]
+
 
     return render(request, 'baby_logs.html', {
         'baby': baby,
@@ -820,6 +811,9 @@ def baby_logs(request, baby_id):
         'sleep_history': sleep_history,
         'feeding_history': feeding_history,
         'diaper_history': diaper_history,
+        'growth_history': growth_history,
+        'medical_notes_history': medical_notes_history,
+
     })
 
 @csrf_exempt
@@ -845,12 +839,11 @@ def calculate_next_nap(baby):
     if not last_sleep:
         return None
 
-    # Simple age-based wake window (you can improve later)
     age_days = (datetime.now().date() - baby.birth_date).days
     age_months = age_days // 30
 
     if age_months <= 3:
-        wake_window = 90  # minutes
+        wake_window = 90
     elif age_months <= 6:
         wake_window = 120
     else:
@@ -885,11 +878,9 @@ def quick_log(request, baby_id):
         SleepSession.objects.create(baby=baby, start_time=datetime.now())
 
     elif log_type == "diaper":
-        # Placeholder: Add your Diaper model creation logic here later
         pass
         
     elif log_type == "feed":
-        # Placeholder: Add logic to create a Feeding entry if you want a default behavior
         pass
 
     return JsonResponse({"status": "ok"})
@@ -901,15 +892,12 @@ def save_detailed_diaper(request, baby_id):
         baby = get_object_or_404(Baby, id=baby_id)
         data = json.loads(request.body)
         
-        # Parse the time string from JS
         time_str = data.get('time')
         if time_str:
-            # Handle standard local datetime string from HTML5 input
             log_time = datetime.strptime(time_str, '%Y-%m-%dT%H:%M')
         else:
             log_time = datetime.now()
             
-        # Create the log with the new fields
         DiaperLog.objects.create(
             baby=baby,
             time=log_time,
@@ -927,11 +915,9 @@ def save_detailed_sleep(request, baby_id):
         baby = get_object_or_404(Baby, id=baby_id)
         data = json.loads(request.body)
         
-        # Parse the start time
         start_time_str = data.get('start_time')
         start_time = datetime.strptime(start_time_str, '%Y-%m-%dT%H:%M')
         
-        # Create the sleep session
         SleepSession.objects.create(
             baby=baby,
             start_time=start_time,
@@ -961,17 +947,29 @@ def save_detailed_growth(request, baby_id):
         return JsonResponse({'status': 'ok'})
     
 @csrf_exempt
+@login_required
 def save_medical_notes(request, baby_id):
     if request.method == 'POST':
         baby = get_object_or_404(Baby, id=baby_id)
         data = json.loads(request.body)
-        
-        baby.medical_notes = data.get('notes', '')
-        baby.save()
-        
-        return JsonResponse({'status': 'ok'})
+        new_note_text = data.get('notes', '').strip()
 
+        if new_note_text:
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+            entry = f"[{timestamp}]: {new_note_text}\n"
+            
+            if baby.medical_notes:
+                baby.medical_notes = entry + "-" * 20 + "\n" + baby.medical_notes
+            else:
+                baby.medical_notes = entry
+            
+            baby.save()
+            return JsonResponse({'status': 'ok', 'updated_notes': baby.medical_notes})
+            
+    return JsonResponse({'status': 'error'}, status=400)
+    
 @csrf_exempt
+@login_required
 def add_medication(request, baby_id):
     if request.method == 'POST':
         baby = get_object_or_404(Baby, id=baby_id)
@@ -980,9 +978,11 @@ def add_medication(request, baby_id):
         Medication.objects.create(
             baby=baby,
             name=data.get('name'),
+            dosage=data.get('dosage', ''),
             times_per_day=data.get('times_per_day', 1),
             days_per_week=data.get('days_per_week', 7)
         )
+        
         return JsonResponse({'status': 'ok'})
     
 @csrf_exempt
@@ -991,19 +991,16 @@ def save_daily_note(request, baby_id):
         baby = get_object_or_404(Baby, id=baby_id)
         data = json.loads(request.body)
         
-        # Get or create today's note
         note, created = DailyNote.objects.get_or_create(baby=baby, date=date.today())
         note.notes = data.get('notes', '')
         note.save()
         
         return JsonResponse({'status': 'ok'})
 
-# --- 2. Endpoint to generate the PDF ---
 def download_report_pdf(request, baby_id):
     baby = get_object_or_404(Baby, id=baby_id)
     today = date.today()
     
-    # Gather all logs for today
     context = {
         'baby': baby,
         'today': today,
@@ -1013,13 +1010,10 @@ def download_report_pdf(request, baby_id):
         'note': DailyNote.objects.filter(baby=baby, date=today).first()
     }
     
-    # Render the HTML template
     html_string = render_to_string('report_pdf.html', context)
     
-    # Convert HTML to PDF
     pdf_file = HTML(string=html_string).write_pdf()
     
-    # Create the HTTP response with PDF headers
     response = HttpResponse(pdf_file, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="{baby.name}_Report_{today}.pdf"'
     

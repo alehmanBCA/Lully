@@ -19,7 +19,6 @@ class Community(models.Model):
     def __str__(self):
         return self.name
 
-
 class CommunityMember(models.Model):
     ROLE_CHOICES = [
         ('admin', 'Admin'),
@@ -242,15 +241,18 @@ class GrowthLog(models.Model):
     class Meta:
         ordering = ['-time']
 
-# NEW: Add this to the bottom of the file
 class Medication(models.Model):
     baby = models.ForeignKey(Baby, on_delete=models.CASCADE, related_name='medications')
     name = models.CharField(max_length=150)
+    dosage = models.CharField(max_length=50, blank=True, null=True)
     times_per_day = models.IntegerField(default=1)
     days_per_week = models.IntegerField(default=7)
 
     class Meta:
-        ordering = ['-id'] # Shows newest added first
+        ordering = ['-id']
+
+    def __str__(self):
+        return f"{self.name} for {self.baby.name}"
 
 class DailyNote(models.Model):
     baby = models.ForeignKey(Baby, on_delete=models.CASCADE, related_name='daily_notes')
@@ -258,7 +260,6 @@ class DailyNote(models.Model):
     notes = models.TextField(blank=True, null=True)
 
     class Meta:
-        # Ensures only one note exists per baby per day
         unique_together = ('baby', 'date') 
         ordering = ['-date']
 

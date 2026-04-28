@@ -75,8 +75,9 @@
             <div class="log-card" onclick="openPanel('Diaper', '🧷', 'diaper-panel')">
                 <div class="card-header">
                     <span class="icon">🧷</span>
-                    <h3>Diaper</h3>
+                    <h3>Diaper</h3>  
                 </div>
+                <p>Record wet/dirty diapers</p>
             </div>
 
             <div class="log-card" onclick="openPanel('Growth', '📏', 'growth-panel')">
@@ -188,8 +189,8 @@
                 </div>
             </div>
             
-            <div id="diaper-panel" class="log-panel" style="display: none;">
-                <h3 style="color: #03446F; margin-bottom: 15px;">🧷 Diaper Log</h3>
+            <div id="diaper-panel" class="panel-section" style="display: none;">
+                <!-- <h3 style="color: #03446F; margin-bottom: 15px;">🧷 Diaper Log</h3> -->
                 
                 <div class="form-group" style="margin-bottom: 20px;">
                     <label style="display: block; font-weight: bold; margin-bottom: 8px;">Time:</label>
@@ -269,72 +270,90 @@
                 
                 <button onclick="saveGrowth('{{ baby.id }}')" class="save-btn">Save Growth Log</button>
                 
-                <div class="history-section" style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px;">
-                    <h4 style="margin-bottom: 10px; color: #03446F;">Recent Growth Logs</h4>
-                    <ul style="list-style: none; padding: 0; font-size: 14px; color: #666;">
-                        {% for growth in growth_history %}
-                        <li style="padding: 8px 0; border-bottom: 1px solid #f9f9f9;">
-                            <strong>{{ growth.time|date:"M d, Y" }}:</strong> 
-                            {% if growth.weight %}{{ growth.weight }} {% if growth.unit == 'metric' %}kg{% else %}lbs{% endif %}{% endif %}
-                            {% if growth.length %} | {{ growth.length }} {% if growth.unit == 'metric' %}cm{% else %}in{% endif %}{% endif %}
-                        </li>
-                        {% empty %}
-                        <li>No growth logs recorded yet.</li>
-                        {% endfor %}
-                    </ul>
+                <div class="history-list">
+                    <h4 style="margin-top: 20px; color: #03446F; border-bottom: 1px solid #eee; padding-bottom: 5px;">Recent Growth Logs</h4>
+                    {% for log in growth_history %}
+                    <div class="history-item" style="background: #f8fbfe; margin-bottom: 8px; padding: 10px; border-radius: 8px; border-left: 4px solid #03446F;">
+                        <div style="font-weight: bold; font-size: 0.85em; color: #666;">
+                            {{ log.time|date:"M d, Y" }}
+                        </div>
+                        <div style="display: flex; gap: 15px; font-size: 0.9em; margin-top: 4px;">
+                            {% if log.weight %}
+                            <span><strong>Weight:</strong> {{ log.weight }} {{ log.unit|slice:":2" }}</span>
+                            {% endif %}
+                            {% if log.length %}
+                            <span><strong>Length:</strong> {{ log.length }} {{ log.unit|slice:":2" }}</span>
+                            {% endif %}
+                            {% if log.head_circumference %}
+                            <span><strong>Head:</strong> {{ log.head_circumference }} {{ log.unit|slice:":2" }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p style="color: #666; font-size: 0.9em; text-align: center; font-style: italic;">No growth logs recorded yet.</p>
+                    {% endfor %}
                 </div>
             </div>
             
             <div id="medical-panel" class="panel-section" style="display: none;">
                 
-                <div class="form-group">
-                    <label style="color: #03446F;">Important Medical Facts & Baselines:</label>
-                    <p style="font-size: 12px; color: #666; margin-top: -5px; margin-bottom: 8px;">Log known allergies, higher baseline temperatures, or heart rate norms.</p>
-                    <textarea id="medical-facts" class="form-control" rows="4" placeholder="e.g. Baby has a slightly faster heartbeat than average...">{{ baby.medical_notes|default_if_none:"" }}</textarea>
-                    <button onclick="saveMedicalFacts('{{ baby.id }}')" class="btn" style="margin-top: 10px; background: #88A9C0; color: white; padding: 10px 15px; border-radius: 8px; border: none; cursor: pointer; width: 100%;">Save Facts</button>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 8px;">Medical Notes / Symptoms:</label>
+                    <textarea id="medical-notes" class="notes-input" style="width: 100%; height: 100px; padding: 10px; border-radius: 8px; border: 1px solid #d1e3f0;">{{ baby.medical_notes }}</textarea>
+                    <button class="save-btn" onclick="saveMedicalNotes('{{ baby.id }}')" style="margin-top: 10px;">Save Notes</button>
+                    
+                    <button onclick="toggleNotes()" style="margin-top:10px;">
+                        📋 View History
+                    </button>
+                    
+                    <div id="notesArchive" style="display:none; margin-top:10px;">
+                        <h4>Medical Notes History</h4>
+                        {% for note in medical_notes_history %}
+                        <div style="background:#f5f5f5; padding:10px; margin-bottom:8px; border-radius:8px;">
+                            <small>{{ note.date }}</small><br>
+                            {{ note.notes }}
+                        </div>
+                        {% empty %}
+                        <p>No medical notes yet.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div style="background: #f8fbff; padding: 15px; border-radius: 10px; border: 1px solid #d1e3f0;">
+                    <h4 style="color: #03446F; margin-bottom: 10px;">Add Medication</h4>
+                    
+                    <input type="text" id="med-name" placeholder="Medication Name" style="width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ccc;">
+                    <input type="text" id="med-dosage" placeholder="Dosage (e.g., 2ml, 1 pill)" style="width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ccc;">
+                    
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <div style="flex: 1;">
+                            <label style="font-size: 0.85em; color: #666;">Times / Day</label>
+                            <input type="number" id="med-times" value="1" min="1" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ccc;">
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="font-size: 0.85em; color: #666;">Days / Week</label>
+                            <input type="number" id="med-days" value="7" min="1" max="7" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ccc;">
+                        </div>
+                    </div>
+                    
+                    <button class="save-btn" onclick="addMedication('{{ baby.id }}')" style="width: 100%;">Add Medicine</button>
                 </div>
                 
-                <hr style="border: 0; border-top: 2px dashed #d1e3f0; margin: 25px 0;">
-                
-                <h4 style="color: #03446F; margin-bottom: 15px;">Required Medications</h4>
-                
-                <ul style="list-style: none; padding: 0; margin-bottom: 20px;">
+                <h4 style="color: #03446F; margin-top: 20px; margin-bottom: 10px;">Current Medications</h4>
+                <ul id="medication-list" style="list-style: none; padding: 0;">
                     {% for med in baby.medications.all %}
-                    <li style="background: white; padding: 12px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #d1e3f0; display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <strong style="color: #083049; font-size: 16px;">{{ med.name }}</strong><br>
-                            <small style="color: #666;">{{ med.times_per_day }} times a day • {{ med.days_per_week }} days a week</small>
+                    <li style="background: white; padding: 10px; border-radius: 5px; border: 1px solid #eee; margin-bottom: 5px;">
+                        <strong>{{ med.name }}</strong> {% if med.dosage %}({{ med.dosage }}){% endif %}
+                        <div style="font-size: 0.85em; color: #666; margin-top: 4px;">
+                            ↻ {{ med.times_per_day }} times/day, {{ med.days_per_week }} days/week
                         </div>
-                        <span style="font-size: 24px;">💊</span>
                     </li>
                     {% empty %}
-                    <li style="color: #88A9C0; font-size: 14px; text-align: center; padding: 10px;">No medications currently tracked.</li>
+                    <p style="color: #666; font-size: 0.9em;">No active medications.</p>
                     {% endfor %}
                 </ul>
-                
-                <div style="background: #e0f2ff; padding: 15px; border-radius: 12px;">
-                    <h4 style="margin-top: 0; margin-bottom: 15px; color: #03446F;">+ Add Medicine</h4>
-                    
-                    <div class="form-group" style="margin-bottom: 10px;">
-                        <label>Medicine Name:</label>
-                        <input type="text" id="med-name" class="form-control" placeholder="e.g. Amoxicillin">
-                    </div>
-                    
-                    <div style="display: flex; gap: 10px;">
-                        <div class="form-group" style="flex: 1; margin-bottom: 10px;">
-                            <label>Times a Day:</label>
-                            <input type="number" id="med-times-day" class="form-control" value="1" min="1">
-                        </div>
-                        <div class="form-group" style="flex: 1; margin-bottom: 10px;">
-                            <label>Days a Week:</label>
-                            <input type="number" id="med-days-week" class="form-control" value="7" min="1" max="7">
-                        </div>
-                    </div>
-                    
-                    <button onclick="addMedication('{{ baby.id }}')" class="save-btn" style="margin-top: 5px;">Save Medicine</button>
-                </div>
             </div>
-            
+
             <div id="report-panel" class="panel-section" style="display: none;">
                 
                 <div style="background: #e0f2ff; padding: 15px; border-radius: 12px; margin-bottom: 20px;">

@@ -61,7 +61,6 @@ body::before {
     color: #03446F;
 }
 
-
 .quick-actions {
     display: flex;
     gap: 15px;
@@ -102,12 +101,6 @@ body::before {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-/* .log-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    padding: 20px 0;
-} */
  .log-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr); 
@@ -148,11 +141,6 @@ body::before {
     font-size: 28px;
 }
 
-/* .card-header h3 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 600;
-} */
 .card-header h3 {
     margin: 0;
     font-size: 16px;
@@ -327,7 +315,6 @@ body::before {
     font-size: 20px;
 }
 
-/* Diaper Status Buttons */
 .diaper-status-container {
     display: flex;
     gap: 10px;
@@ -349,7 +336,6 @@ body::before {
     box-shadow: 0 2px 8px rgba(3, 68, 111, 0.1);
 }
 
-/* Diaper Color Selectors */
 .color-selector {
     display: flex;
     gap: 15px;
@@ -368,14 +354,12 @@ body::before {
     transform: scale(1.15);
 }
 
-/* Specific Colors */
 .bg-yellow { background-color: #FDE047; }
 .bg-brown { background-color: #8B4513; }
 .bg-green { background-color: #4ADE80; }
 .bg-red { background-color: #EF4444; }
 .bg-black { background-color: #1F2937; }
 
-/* Feeding Side Buttons */
 .feeding-side-container {
     display: flex;
     justify-content: space-between;
@@ -399,7 +383,7 @@ body::before {
 }
 
 .feeding-btn.circle-btn {
-    flex: none; /* Prevents the circle from stretching */
+    flex: none;
     width: 75px;
     height: 75px;
     border-radius: 50%;

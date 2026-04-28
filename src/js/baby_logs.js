@@ -156,7 +156,6 @@ function setFeedingSide(side, element) {
     element.classList.add('active');
 }
 
-// 2. Timer Functionality
 function toggleTimer() {
     const timerDisplay = document.getElementById('timer-display');
     const timerBtn = document.getElementById('timer-btn');
@@ -179,7 +178,6 @@ function toggleTimer() {
 function saveFeeding(babyId) {
     const timeInput = document.getElementById('feeding-time'); 
     
-    // Calculate local time for the user's location
     const now = new Date();
     const timezoneOffset = now.getTimezoneOffset() * 60000;
     const localDateTime = new Date(now.getTime() - timezoneOffset).toISOString().slice(0, 16); 
@@ -206,9 +204,6 @@ function saveFeeding(babyId) {
     });
 }
 
-
-
-// Keep track of the selections
 let selectedDiaperStatus = 'Pee';
 let selectedDiaperColor = 'Yellow';
 
@@ -297,10 +292,9 @@ function setDefaultSleepTime() {
     }
 }
 
-// Example of how to trigger it when a modal opens
 function openDetailedSleepModal() {
     document.getElementById('sleep-modal').style.display = 'block';
-    setDefaultSleepTime(); // Fills in the current time right as they open it
+    setDefaultSleepTime();
 }
 
 function toggleSleepTimer() {
@@ -331,9 +325,8 @@ function setSleepPosition(position, element) {
 
 function saveSleep(babyId) {
     const startTimeInput = document.getElementById('sleep-start-time');
-    // Default to current time if no start time is provided
     const startTime = startTimeInput.value || new Date().toISOString().slice(0, 16);
-    const duration = Math.round(sleepSecondsElapsed / 60); // Duration in minutes
+    const duration = Math.round(sleepSecondsElapsed / 60);
     const position = selectedSleepPosition;
 
     fetch(`/api/baby/${babyId}/sleep/detailed-save/`, {
@@ -349,7 +342,7 @@ function saveSleep(babyId) {
         })
     }).then(res => {
         if (res.ok) {
-            location.reload(); // Refresh to show the new log in the history list
+            location.reload();
         } else {
             console.error('Failed to save sleep data');
         }
@@ -482,6 +475,90 @@ function saveDailyNotes(babyId) {
         } else {
             console.error('Failed to save notes');
             alert('Failed to save notes.');
+        }
+    });
+}
+
+function toggleNotes() {
+    const archive = document.getElementById("notesArchive");
+    archive.style.display = archive.style.display === "none" ? "block" : "none";
+}
+
+// function saveMedicalNotes(babyId) {
+//     const notes = document.getElementById('medical-notes').value;
+
+//     fetch(`/api/baby/${babyId}/medical/notes/save/`, {
+//         method: 'POST',
+//         headers: {
+//             'Content-Type': 'application/json',
+//             'X-CSRFToken': getCookie('csrftoken')
+//         },
+//         body: JSON.stringify({ notes: notes })
+//     }).then(res => {
+//         if (res.ok) {
+//             // Remove the alert() and add this line instead:
+//             location.reload(); 
+//         } else {
+//             alert("Error saving medical notes.");
+//         }
+//     });
+// }
+
+function saveMedicalNotes(babyId) {
+    const notesInput = document.getElementById('medical-notes');
+    const notesValue = notesInput.value;
+
+    if (!notesValue) {
+        alert("Please enter a note before saving.");
+        return;
+    }
+
+    fetch(`/api/baby/${babyId}/medical/notes/save/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ notes: notesValue })
+    }).then(res => {
+        if (res.ok) {
+            location.reload(); 
+            // notesInput.value = ""; 
+            // alert("Note added to archive!");
+        } else {
+            alert("Error saving medical notes.");
+        }
+    });
+}
+
+function addMedication(babyId) {
+    const name = document.getElementById('med-name').value;
+    const dosage = document.getElementById('med-dosage').value;
+    const times = document.getElementById('med-times').value;
+    const days = document.getElementById('med-days').value;
+
+    if (!name) {
+        alert("Please fill out the medication name.");
+        return;
+    }
+
+    fetch(`/api/baby/${babyId}/medical/medication/add/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ 
+            name: name,
+            dosage: dosage,
+            times_per_day: parseInt(times) || 1,
+            days_per_week: parseInt(days) || 7
+        })
+    }).then(res => {
+        if (res.ok) {
+            location.reload(); // Reload to show the new medication
+        } else {
+            alert("Error adding medication.");
         }
     });
 }

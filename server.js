@@ -10,9 +10,8 @@ app.use('/src', express.static('src'));
 const port = process.env.PORT || 3000;
 const host = '127.0.0.1';
 
-// Internal state per-baby so each child can have independent vitals (random walk)
-const hrState = {};     // babyId -> currentHr
-const tempState = {};   // babyId -> currentTemp
+const hrState = {};    
+const tempState = {};   
 
 function clamp(v, lo, hi) {
     return Math.max(lo, Math.min(hi, v));
@@ -89,15 +88,3 @@ res.json({ temperatureF: currentTemp });
 app.listen(port, host, () => {
     console.log(`Mock APIs running at http://${host}:${port}`);
 });
-
-// app.listen(port, host, () => {
-//     const hrUrl = `http://${host}:${port}/api/hr`;
-//     const tempUrl = `http://${host}:${port}/api/temperature`;
-//     const rootUrl = `http://${host}:${port}/`;
-//     console.log(`Mock HR API listening at ${hrUrl}`);
-//     console.log(`Mock Temperature API listening at ${tempUrl}`);
-
-//     exec(`open ${rootUrl}`, (err) => {
-//         if (err) console.error('Failed to open browser:', err);
-//     });
-// });

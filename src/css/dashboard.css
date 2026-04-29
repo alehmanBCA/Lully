@@ -793,6 +793,7 @@ body.dashboard-page {
 .analytics-section p.lead {
     color: #516372;
     margin: 0 0 18px;
+    background-color: #ffffffE6;
 }
 
 .metrics-grid {
@@ -1303,6 +1304,29 @@ body.auth-page::before {
 .cta-panel p,
 .page-footer {
     margin: 0;
+}
+
+.about-us-section {
+    text-align: center;
+}
+
+.lully-creators {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.lully-creator {
+    text-decoration: none;
+    color: var(--dash-text);
+}
+
+.lully-creator:visited {
+    color: var(--dash-text);
+}
+
+.lully-creator:hover {
+    text-decoration: underline;
 }
 
 .preview-head p {

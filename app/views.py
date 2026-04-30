@@ -44,6 +44,14 @@ def get_accessible_babies(user):
         Q(household__memberships__user=user, household__memberships__is_active=True)
     ).distinct().select_related('household')
 
+
+def get_baby_if_accessible(user, baby_id):
+    """Return the Baby if the user is the parent or an active household member; raise 404 otherwise."""
+    return get_object_or_404(
+        get_accessible_babies(user),
+        id=baby_id
+    )
+
 def get_user_household(user):
     membership = HouseholdMember.objects.select_related('household').filter(user=user, is_active=True).first()
     if membership:
@@ -508,7 +516,7 @@ def remove_household_member(request, member_id):
 
 @login_required
 def delete_baby(request, baby_id):
-    baby = get_object_or_404(Baby, id=baby_id, parent=request.user)
+    baby = get_baby_if_accessible(request.user, baby_id)
     
     if request.method == 'POST':
         baby.delete()
@@ -800,7 +808,7 @@ def get_weight_percentile(weight):
 
 @login_required
 def baby_logs(request, baby_id):
-    baby = get_object_or_404(Baby, id=baby_id, parent=request.user)
+    baby = get_baby_if_accessible(request.user, baby_id)
     next_nap = calculate_next_nap(baby)
 
     feeding_history = Feeding.objects.filter(baby=baby).order_by('-time')[:5]
@@ -865,7 +873,7 @@ def baby_logs(request, baby_id):
 def save_detailed_feeding(request, baby_id):
     if request.method == 'POST':
         data = json.loads(request.body)
-        baby = get_object_or_404(Baby, id=baby_id, parent=request.user)
+        baby = get_baby_if_accessible(request.user, baby_id)
         
         Feeding.objects.create(
             baby=baby,

@@ -51,54 +51,66 @@ body::before {
     justify-content: center;
 }
 
-.nap-banner {
+.diaper-banner { 
     background: #fff3cd;
-    color: #856404;
+    color: #856404; 
 }
-
-.feed-banner {
+.medication-banner { 
     background: #e6f2ff;
     color: #03446F;
 }
 
 .quick-actions {
     display: flex;
-    gap: 15px;
-    margin-bottom: 25px;
+    flex-direction: row;
+    gap: 12px;
+    margin-bottom: 2rem;
+    width: 100%;
 }
 
-.quick-actions button {
+.action-card {
     flex: 1;
+    background: white;
+    padding: 1rem 0.5rem;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.2s;
+    border: 1px solid #eee;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 20px 10px;
-    border: none;
-    border-radius: 16px;
-    background: white;
-    color: #03446F;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    transition: all 0.2s ease;
 }
 
-.quick-actions button .btn-icon {
-    font-size: 24px;
-    margin-bottom: 8px;
-}
-
-.quick-actions button:hover {
+.action-card:hover {
     transform: translateY(-2px);
-    background: #f0f8ff;
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    background-color: #fcfcfc;
 }
 
-.quick-actions button:active {
-    transform: translateY(1px);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+.action-card:active {
+    transform: scale(0.95);
+    background-color: #f0f0f0;
+}
+
+.action-card.primary-action {
+    border-color: var(--primary-color);
+    background: #fdf8f5;
+}
+
+.action-icon {
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+}
+.action-card p {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 600;
 }
 
  .log-grid {
@@ -398,6 +410,20 @@ body::before {
     border-color: #03446F;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(3, 68, 111, 0.1);
+}
+.delete-btn {
+    background-color: #03446F;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.delete-btn:hover {
+    opacity: 0.9;
 }
 
 @media (max-width: 768px) {

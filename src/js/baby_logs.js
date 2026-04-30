@@ -85,6 +85,7 @@ function openPanel(categoryTitle, iconHtml, panelId) {
         activeSection.style.display = 'block';
         if (panelId === 'sleep-panel') setDefaultSleepTime();
         if (panelId === 'growth-panel') setDefaultGrowthTime();
+        if (panelId === 'diaper-panel') setDefaultDiaperTime();
     }
 
     slidePanel.classList.add('active');
@@ -102,46 +103,18 @@ function closePanel() {
     
 }
 
-// document.getElementById('start-timer')?.addEventListener('click', () => {
-//     const startBtn = document.getElementById('start-timer');
-//     const stopBtn = document.getElementById('stop-timer');
-    
-//     startBtn.disabled = true;
-//     stopBtn.disabled = false;
+function quickStartFeeding() {
+    openPanel('Feeding', '🍼', 'feeding-panel');
 
-//     timerInterval = setInterval(() => {
-//         secondsElapsed++;
-//         const mins = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
-//         const secs = String(secondsElapsed % 60).padStart(2, '0');
-//         document.getElementById('timer-display').textContent = `${mins}:${secs}`;
-//     }, 1000);
-// });
+    const bothRadio = document.querySelector('input[name="side"][value="B"]');
+    if (bothRadio) {
+        bothRadio.checked = true;
+    }
 
-// document.getElementById('stop-timer')?.addEventListener('click', () => {
-//     clearInterval(timerInterval);
-//     document.getElementById('start-timer').disabled = false;
-//     document.getElementById('stop-timer').disabled = true;
-// });
-
-// function saveFeeding(babyId) {
-//     const duration = Math.round(secondsElapsed / 60);
-//     const side = document.getElementById('feeding-side').value;
-
-//     fetch(`/api/baby/${babyId}/feeding/save/`, {
-//         method: 'POST',
-//         headers: {
-//             'Content-Type': 'application/json',
-//             'X-CSRFToken': getCookie('csrftoken')
-//         },
-//         body: JSON.stringify({ duration, side })
-//     }).then(res => {
-//         if (res.ok) {
-//             location.reload();
-//         } else {
-//             console.error('Failed to save feeding data');
-//         }
-//     });
-// }
+    if (!timerInterval) {
+        toggleTimer();
+    }
+}
 
 let timerInterval = null;
 let secondsElapsed = 0;
@@ -204,6 +177,42 @@ function saveFeeding(babyId) {
     });
 }
 
+function quickSaveDiaper(babyId) {
+    openPanel('Diaper', '🧷', 'diaper-panel');
+
+    const quickData = {
+        time: new Date().toISOString().slice(0, 16),
+        status: 'Both',
+        color: 'Yellow/Brown',
+        notes: 'Quick logged: Wet & Dirty (Yellow/Brown)'
+    };
+
+    fetch(`/api/baby/${babyId}/diaper/detailed-save/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(quickData)
+    })
+    .then(response => {
+        if (response.ok) {
+            const panel = document.getElementById('diaper-panel');
+            panel.innerHTML = '<div style="text-align:center; padding: 20px;"><h3>✅ Saved!</h3><p>Reloading...</p></div>';
+            
+            setTimeout(() => {
+                location.reload();
+            }, 800);
+        } else {
+            alert("Error auto-saving diaper log.");
+            }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert("Failed to connect to server.");
+    });
+}
+
 let selectedDiaperStatus = 'Pee';
 let selectedDiaperColor = 'Yellow';
 
@@ -229,9 +238,25 @@ function setDiaperColor(color, element) {
     element.classList.add('active');
 }
 
+function setDefaultDiaperTime() {
+    const timeInput = document.getElementById('diaper-time');
+    if (timeInput) {
+        const now = new Date();
+        const offset = now.getTimezoneOffset() * 60000;
+        const localISOTime = new Date(now.getTime() - offset).toISOString().slice(0, 16);
+        timeInput.value = localISOTime;
+    }
+}
+
 function saveDiaper(babyId) {
+    // 1. Get the value from the 'Time of Change' input field
     const timeInput = document.getElementById('diaper-time').value;
-    const time = timeInput || new Date().toISOString().slice(0, 16);
+    
+    // 2. Use the input value, or fallback to current time if the field is empty
+    // const time = timeInput || new Date().toISOString();
+    const now = new Date();
+    const offset = now.getTimezoneOffset() * 60000;
+    const time = timeInput || new Date(now.getTime() - offset).toISOString().slice(0, 16);
 
     fetch(`/api/baby/${babyId}/diaper/detailed-save/`, {
         method: 'POST',
@@ -239,49 +264,39 @@ function saveDiaper(babyId) {
             'Content-Type': 'application/json',
             'X-CSRFToken': getCookie('csrftoken')
         },
-        body: JSON.stringify({ 
-            time: time,
+        body: JSON.stringify({
+            time: time,  // This now sends your inputted date and time
             status: selectedDiaperStatus,
             color: selectedDiaperColor
         })
     }).then(res => {
         if (res.ok) {
-            location.reload(); 
-        } else {
-            alert("Error saving diaper log.");
+            location.reload(); // Refresh to show the new entry immediately
         }
     });
 }
 
+// Replace both existing quickStartSleep functions with this single, corrected one:
+function quickStartSleep(babyId, preferredPosition) {
+    // 1. Open the Panel using your existing openPanel function
+    openPanel('Sleep', '😴', 'sleep-panel');
 
-// let selectedDiaperType = 'Both';
+    // 2. Set the sleeping position automatically
+    // Finds buttons inside the position selector and clicks the one matching the preferred position
+        const positionButtons = document.querySelectorAll('#sleep-position-selector .diaper-type-btn');
+        positionButtons.forEach(btn => {
+            if (btn.innerText.trim().includes(preferredPosition)) {
+                btn.click(); 
+            }
+        });
 
-// function setDiaperType(type, element) {
-//     selectedDiaperType = type;
-//     document.querySelectorAll('.diaper-type-btn').forEach(btn => btn.classList.remove('active'));
-//     element.classList.add('active');
-// }
-
-// function saveDetailedDiaper(babyId) {
-//     const timeInput = document.getElementById('diaper-time').value;
-//     const time = timeInput ? timeInput : new Date().toISOString().slice(0, 16);
-//     const type = selectedDiaperType;
-
-//     fetch(`/api/baby/${babyId}/diaper/detailed-save/`, {
-//         method: 'POST',
-//         headers: {
-//             'Content-Type': 'application/json',
-//             'X-CSRFToken': getCookie('csrftoken')
-//         },
-//         body: JSON.stringify({ time, type })
-//     }).then(res => {
-//         if (res.ok) {
-//             location.reload();
-//         } else {
-//             alert('Failed to save diaper log');
-//         }
-//     });
-// }
+    // 3. Automatically start the timer
+        const timerBtn = document.getElementById('sleep-timer-btn');
+    // We check if the button says "Start" so we don't accidentally STOP a timer if it's already running
+    if (timerBtn && timerBtn.innerText.includes('Start')) {
+            toggleSleepTimer(); 
+        }
+    }
 
 function setDefaultSleepTime() {
     const timeInput = document.getElementById('sleep-start-time');
@@ -325,7 +340,12 @@ function setSleepPosition(position, element) {
 
 function saveSleep(babyId) {
     const startTimeInput = document.getElementById('sleep-start-time');
-    const startTime = startTimeInput.value || new Date().toISOString().slice(0, 16);
+
+    const now = new Date();
+    const offset = now.getTimezoneOffset() * 60000;
+    const localISOTime = new Date(now.getTime() - offset).toISOString().slice(0, 16);
+
+    const startTime = startTimeInput.value || localISOTime;
     const duration = Math.round(sleepSecondsElapsed / 60);
     const position = selectedSleepPosition;
 
@@ -348,49 +368,6 @@ function saveSleep(babyId) {
         }
     });
 }
-
-
-// document.getElementById('start-sleep-timer')?.addEventListener('click', () => {
-//     document.getElementById('start-sleep-timer').disabled = true;
-//     document.getElementById('stop-sleep-timer').disabled = false;
-    
-//     sleepTimerInterval = setInterval(() => {
-//         sleepSecondsElapsed++;
-//         const mins = String(Math.floor(sleepSecondsElapsed / 60)).padStart(2, '0');
-//         const secs = String(sleepSecondsElapsed % 60).padStart(2, '0');
-//         document.getElementById('sleep-timer-display').textContent = `${mins}:${secs}`;
-//     }, 1000);
-// });
-
-// document.getElementById('stop-sleep-timer')?.addEventListener('click', () => {
-//     clearInterval(sleepTimerInterval);
-//     document.getElementById('start-sleep-timer').disabled = false;
-//     document.getElementById('stop-sleep-timer').disabled = true;
-// });
-
-// function setSleepPosition(position, element) {
-//     selectedSleepPosition = position;
-//     const parent = element.closest('.diaper-type-selector');
-//     parent.querySelectorAll('.diaper-type-btn').forEach(btn => btn.classList.remove('active'));
-//     element.classList.add('active');
-// }
-
-// function saveDetailedSleep(babyId) {
-//     const time = document.getElementById('sleep-start-time').value;
-//     const duration = Math.round(sleepSecondsElapsed / 60);
-//     const position = selectedSleepPosition;
-
-//     fetch(`/api/baby/${babyId}/sleep/detailed-save/`, {
-//         method: 'POST',
-//         headers: {
-//             'Content-Type': 'application/json',
-//             'X-CSRFToken': getCookie('csrftoken')
-//         },
-//         body: JSON.stringify({ time, duration, position })
-//     }).then(res => {
-//         if (res.ok) location.reload();
-//     });
-// }
 
 let currentMeasurementUnit = 'metric';
 
@@ -427,7 +404,13 @@ function setMeasurementUnit(unit, element) {
 
 function saveGrowth(babyId) {
     const timeInput = document.getElementById('growth-time').value;
-    const time = timeInput ? timeInput : new Date().toISOString().slice(0, 16);
+
+    const now = new Date();
+    const offset = now.getTimezoneOffset() * 60000;
+    const localISOTime = new Date(now.getTime() - offset).toISOString().slice(0, 16);
+
+    const time = timeInput ? timeInput : localISOTime;
+
     const weight = document.getElementById('growth-weight').value;
     const length = document.getElementById('growth-length').value;
     const headCirc = document.getElementById('growth-head').value;
@@ -471,10 +454,9 @@ function saveDailyNotes(babyId) {
         body: JSON.stringify({ notes: notesText })
     }).then(res => {
         if (res.ok) {
-            alert('Daily notes saved successfully!');
+            location.reload(); 
         } else {
-            console.error('Failed to save notes');
-            alert('Failed to save notes.');
+            alert('Failed to save daily notes.');
         }
     });
 }
@@ -484,31 +466,11 @@ function toggleNotes() {
     archive.style.display = archive.style.display === "none" ? "block" : "none";
 }
 
-// function saveMedicalNotes(babyId) {
-//     const notes = document.getElementById('medical-notes').value;
-
-//     fetch(`/api/baby/${babyId}/medical/notes/save/`, {
-//         method: 'POST',
-//         headers: {
-//             'Content-Type': 'application/json',
-//             'X-CSRFToken': getCookie('csrftoken')
-//         },
-//         body: JSON.stringify({ notes: notes })
-//     }).then(res => {
-//         if (res.ok) {
-//             // Remove the alert() and add this line instead:
-//             location.reload(); 
-//         } else {
-//             alert("Error saving medical notes.");
-//         }
-//     });
-// }
-
 function saveMedicalNotes(babyId) {
     const notesInput = document.getElementById('medical-notes');
     const notesValue = notesInput.value;
 
-    if (!notesValue) {
+    if (!notesValue.trim()) {
         alert("Please enter a note before saving.");
         return;
     }
@@ -523,8 +485,6 @@ function saveMedicalNotes(babyId) {
     }).then(res => {
         if (res.ok) {
             location.reload(); 
-            // notesInput.value = ""; 
-            // alert("Note added to archive!");
         } else {
             alert("Error saving medical notes.");
         }
@@ -556,9 +516,30 @@ function addMedication(babyId) {
         })
     }).then(res => {
         if (res.ok) {
-            location.reload(); // Reload to show the new medication
+            location.reload();
         } else {
             alert("Error adding medication.");
         }
     });
+}
+function deleteMedication(medId) {
+    if (!confirm("Are you sure you want to remove this medication?")) {
+        return;
+    }
+
+    fetch(`/api/medication/${medId}/delete/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(res => {
+        if (res.ok) {
+            location.reload();
+        } else {
+            alert("Error deleting medication. Please try again.");
+        }
+    })
+    .catch(error => console.error('Error:', error));
 }

@@ -26,6 +26,7 @@ from django.http import HttpResponse, JsonResponse
 from weasyprint import HTML
 from datetime import date
 from datetime import datetime
+from django.utils import timezone
 
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
@@ -797,13 +798,32 @@ def get_weight_percentile(weight):
 def baby_logs(request, baby_id):
     baby = get_object_or_404(Baby, id=baby_id, parent=request.user)
     next_nap = calculate_next_nap(baby)
-    
-    sleep_history = SleepSession.objects.filter(baby=baby).order_by('-start_time')[:5]
+
     feeding_history = Feeding.objects.filter(baby=baby).order_by('-time')[:5]
     diaper_history = DiaperLog.objects.filter(baby=baby).order_by('-time')[:5]
     growth_history = GrowthLog.objects.filter(baby=baby).order_by('-time')[:5]
     medical_notes_history = DailyNote.objects.filter(baby=baby).order_by('-date')[:10]
 
+    all_sleep = SleepSession.objects.filter(baby=baby)
+    positions = [s.position for s in all_sleep if s.position]
+    preferred_position = Counter(positions).most_common(1)[0][0] if positions else "Back"
+
+    sleep_history = SleepSession.objects.filter(baby=baby).order_by('-start_time')[:5]
+
+    last_diaper = DiaperLog.objects.filter(baby=baby).order_by('-time').first()
+    medications = Medication.objects.filter(baby=baby)
+
+    today = timezone.localdate()
+    diapers = DiaperLog.objects.filter(baby=baby, time__date=today)
+    today_feedings_count = Feeding.objects.filter(baby=baby, time__date=today).count()
+    today_diapers_count = DiaperLog.objects.filter(baby=baby, time__date=today).count()
+    today_sleeps_count = SleepSession.objects.filter(baby=baby, start_time__date=today).count()
+    today_growth_count = GrowthLog.objects.filter(baby=baby, time__date=today).count()
+    today_meds_count = Medication.objects.filter(baby=baby).count()
+    today_notes_count = DailyNote.objects.filter(baby=baby, date=today).count()
+    # today_note = DailyNote.objects.filter(baby=baby, date=today).first()
+    
+    daily_notes_history = DailyNote.objects.filter(baby=baby).exclude(notes='').exclude(notes__isnull=True).order_by('-date')[:7]
 
     return render(request, 'baby_logs.html', {
         'baby': baby,
@@ -813,7 +833,27 @@ def baby_logs(request, baby_id):
         'diaper_history': diaper_history,
         'growth_history': growth_history,
         'medical_notes_history': medical_notes_history,
+        'diapers': diapers,
 
+        'preferred_position': preferred_position,
+
+        'last_diaper': last_diaper,
+        'medications': medications,
+
+        # 'today_note': today_note,
+        # 'today_feedings_count': Feeding.objects.filter(baby=baby, time__date=today).count(),
+        # 'today_diapers_count': DiaperLog.objects.filter(baby=baby, time__date=today).count(),
+        # 'today_sleeps_count': SleepSession.objects.filter(baby=baby, start_time__date=today).count(),
+        # 'today_growth_count': GrowthLog.objects.filter(baby=baby, time__date=today).count(),
+        'daily_notes_history': daily_notes_history,
+        # 'today_meds_count': Medication.objects.filter(baby=baby).count(),
+        # 'today_notes_count': DailyNote.objects.filter(baby=baby, date=today).exists(),
+        'today_feedings_count': today_feedings_count,
+        'today_diapers_count': today_diapers_count,
+        'today_sleeps_count': today_sleeps_count,
+        'today_growth_count': today_growth_count,
+        'today_meds_count': today_meds_count,
+        'today_notes_count': today_notes_count,
     })
 
 @csrf_exempt
@@ -894,11 +934,12 @@ def save_detailed_diaper(request, baby_id):
         
         time_str = data.get('time')
         if time_str:
-            log_time = datetime.strptime(time_str, '%Y-%m-%dT%H:%M')
+            naive_time = datetime.strptime(time_str, '%Y-%m-%dT%H:%M')
+            log_time = timezone.make_aware(naive_time)   # ← fix: make it timezone-aware
         else:
-            log_time = datetime.now()
+            log_time = timezone.now()                    # ← fix: use timezone.now() not datetime.now()
             
-        DiaperLog.objects.create(
+        result = DiaperLog.objects.create(
             baby=baby,
             time=log_time,
             status=data.get('status', 'Pee'),
@@ -906,6 +947,8 @@ def save_detailed_diaper(request, baby_id):
         )
         
         return JsonResponse({'status': 'ok'})
+    
+    return JsonResponse({'status': 'error'}, status=400)
     
 
 @csrf_exempt
@@ -916,8 +959,10 @@ def save_detailed_sleep(request, baby_id):
         data = json.loads(request.body)
         
         start_time_str = data.get('start_time')
+
         start_time = datetime.strptime(start_time_str, '%Y-%m-%dT%H:%M')
-        
+        start_time = timezone.make_aware(start_time)
+
         SleepSession.objects.create(
             baby=baby,
             start_time=start_time,
@@ -934,7 +979,12 @@ def save_detailed_growth(request, baby_id):
         data = json.loads(request.body)
         
         time_str = data.get('time')
-        log_time = datetime.strptime(time_str, '%Y-%m-%dT%H:%M') if time_str else datetime.now()
+
+        if time_str:
+            naive_time = datetime.strptime(time_str, '%Y-%m-%dT%H:%M')
+            log_time = timezone.make_aware(naive_time)
+        else:
+            log_time = timezone.now()
         
         GrowthLog.objects.create(
             baby=baby,
@@ -952,19 +1002,19 @@ def save_medical_notes(request, baby_id):
     if request.method == 'POST':
         baby = get_object_or_404(Baby, id=baby_id)
         data = json.loads(request.body)
-        new_note_text = data.get('notes', '').strip()
+        new_note = data.get('notes', '').strip()
 
-        if new_note_text:
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
-            entry = f"[{timestamp}]: {new_note_text}\n"
+        if new_note:
+            now = datetime.now().strftime("%b %d, %Y - %I:%M %p")
+            formatted_note = f"[{now}]\n{new_note}\n"
             
             if baby.medical_notes:
-                baby.medical_notes = entry + "-" * 20 + "\n" + baby.medical_notes
+                baby.medical_notes = formatted_note + "\n---\n" + baby.medical_notes
             else:
-                baby.medical_notes = entry
+                baby.medical_notes = formatted_note
             
             baby.save()
-            return JsonResponse({'status': 'ok', 'updated_notes': baby.medical_notes})
+            return JsonResponse({'status': 'ok'})
             
     return JsonResponse({'status': 'error'}, status=400)
     
@@ -986,14 +1036,33 @@ def add_medication(request, baby_id):
         return JsonResponse({'status': 'ok'})
     
 @csrf_exempt
+def delete_medication(request, med_id):
+    if request.method == 'POST':
+        medication = get_object_or_404(Medication, id=med_id)
+        medication.delete()
+        return JsonResponse({'status': 'ok'})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
+@csrf_exempt
 def save_daily_note(request, baby_id):
     if request.method == 'POST':
         baby = get_object_or_404(Baby, id=baby_id)
         data = json.loads(request.body)
         
-        note, created = DailyNote.objects.get_or_create(baby=baby, date=date.today())
-        note.notes = data.get('notes', '')
-        note.save()
+        new_text = data.get('notes', '').strip()
+        
+        if new_text:
+            note, created = DailyNote.objects.get_or_create(baby=baby, date=date.today())
+            
+            time_str = datetime.now().strftime('%I:%M %p')
+            formatted_entry = f"• {time_str} - {new_text}"
+            
+            if note.notes and not created:
+                note.notes += f"\n{formatted_entry}"
+            else:
+                note.notes = formatted_entry
+                
+            note.save()
         
         return JsonResponse({'status': 'ok'})
 

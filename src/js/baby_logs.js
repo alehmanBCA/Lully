@@ -103,18 +103,36 @@ function closePanel() {
     
 }
 
+// function quickStartFeeding() {
+//     openPanel('Feeding', '🍼', 'feeding-panel');
+
+//     const bothRadio = document.querySelector('input[name="side"][value="B"]');
+//     if (bothRadio) {
+//         bothRadio.checked = true;
+//     }
+
+//     if (!timerInterval) {
+//         toggleTimer();
+//     }
+// }
 function quickStartFeeding() {
-    openPanel('Feeding', '🍼', 'feeding-panel');
-
-    const bothRadio = document.querySelector('input[name="side"][value="B"]');
-    if (bothRadio) {
-        bothRadio.checked = true;
-    }
-
-    if (!timerInterval) {
-        toggleTimer();
-    }
+   const feedingModal = document.getElementById('feeding-modal');
+   if (feedingModal) {
+       feedingModal.style.display = 'flex';
+      
+       // Get current local time components
+       const now = new Date();
+       const year = now.getFullYear();
+       const month = String(now.getMonth() + 1).padStart(2, '0');
+       const day = String(now.getDate()).padStart(2, '0');
+       const hours = String(now.getHours()).padStart(2, '0');
+       const minutes = String(now.getMinutes()).padStart(2, '0');
+      
+       // Set the input value to "YYYY-MM-DDTHH:MM" in local time
+       document.getElementById('feeding-time').value = `${year}-${month}-${day}T${hours}:${minutes}`;
+   }
 }
+
 
 let timerInterval = null;
 let secondsElapsed = 0;
@@ -148,34 +166,65 @@ function toggleTimer() {
     }
 }
 
-function saveFeeding(babyId) {
-    const timeInput = document.getElementById('feeding-time'); 
+// function saveFeeding(babyId) {
+//     const timeInput = document.getElementById('feeding-time'); 
     
-    const now = new Date();
-    const timezoneOffset = now.getTimezoneOffset() * 60000;
-    const localDateTime = new Date(now.getTime() - timezoneOffset).toISOString().slice(0, 16); 
+//     const now = new Date();
+//     const timezoneOffset = now.getTimezoneOffset() * 60000;
+//     const localDateTime = new Date(now.getTime() - timezoneOffset).toISOString().slice(0, 16); 
 
-    const timeToSave = (timeInput && timeInput.value) ? timeInput.value : localDateTime;
-    const duration = Math.round(secondsElapsed / 60); 
-    const side = selectedFeedingSide;
+//     const timeToSave = (timeInput && timeInput.value) ? timeInput.value : localDateTime;
+//     const duration = Math.round(secondsElapsed / 60); 
+//     const side = selectedFeedingSide;
 
-    fetch(`/api/baby/${babyId}/feeding/save/`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify({ 
-            time: timeToSave, 
-            duration: duration, 
-            side: side 
-        })
-    }).then(res => {
-        if (res.ok) {
-            location.reload();
-        }
-    });
+//     fetch(`/api/baby/${babyId}/feeding/save/`, {
+//         method: 'POST',
+//         headers: {
+//             'Content-Type': 'application/json',
+//             'X-CSRFToken': getCookie('csrftoken')
+//         },
+//         body: JSON.stringify({ 
+//             time: timeToSave, 
+//             duration: duration, 
+//             side: side 
+//         })
+//     }).then(res => {
+//         if (res.ok) {
+//             location.reload();
+//         }
+//     });
+// }
+function saveFeeding(babyId) {
+   const timeInput = document.getElementById('feeding-time');
+  
+   let timeToSave;
+   if (timeInput && timeInput.value) {
+       timeToSave = new Date(timeInput.value).toISOString();
+   } else {
+       timeToSave = new Date().toISOString();
+   }
+
+
+   const duration = Math.round(secondsElapsed / 60);
+   const side = selectedFeedingSide;
+
+
+   fetch(`/api/baby/${babyId}/feeding/save/`, {
+       method: 'POST',
+       headers: {
+           'Content-Type': 'application/json',
+           'X-CSRFToken': getCookie('csrftoken')
+       },
+       body: JSON.stringify({
+           time: timeToSave,
+           duration: duration,
+           side: side
+       })
+   }).then(res => {
+       if (res.ok) location.reload();
+   });
 }
+
 
 function quickSaveDiaper(babyId) {
     openPanel('Diaper', '🧷', 'diaper-panel');
@@ -332,36 +381,70 @@ function setSleepPosition(position, element) {
     element.classList.add('active');
 }
 
+// function saveSleep(babyId) {
+//     const startTimeInput = document.getElementById('sleep-start-time');
+
+//     const now = new Date();
+//     const offset = now.getTimezoneOffset() * 60000;
+//     const localISOTime = new Date(now.getTime() - offset).toISOString().slice(0, 16);
+
+//     const startTime = startTimeInput.value || localISOTime;
+//     const duration = Math.round(sleepSecondsElapsed / 60);
+//     const position = selectedSleepPosition;
+
+//     fetch(`/api/baby/${babyId}/sleep/detailed-save/`, {
+//         method: 'POST',
+//         headers: {
+//             'Content-Type': 'application/json',
+//             'X-CSRFToken': getCookie('csrftoken')
+//         },
+//         body: JSON.stringify({ 
+//             start_time: startTime, 
+//             duration: duration, 
+//             position: position 
+//         })
+//     }).then(res => {
+//         if (res.ok) {
+//             location.reload();
+//         } else {
+//             console.error('Failed to save sleep data');
+//         }
+//     });
+// }
 function saveSleep(babyId) {
-    const startTimeInput = document.getElementById('sleep-start-time');
+   const startTimeInput = document.getElementById('sleep-start-time');
 
-    const now = new Date();
-    const offset = now.getTimezoneOffset() * 60000;
-    const localISOTime = new Date(now.getTime() - offset).toISOString().slice(0, 16);
 
-    const startTime = startTimeInput.value || localISOTime;
-    const duration = Math.round(sleepSecondsElapsed / 60);
-    const position = selectedSleepPosition;
+   const now = new Date();
+   const offset = now.getTimezoneOffset() * 60000;
+   const localISOTime = new Date(now.getTime() - offset).toISOString().slice(0, 16);
 
-    fetch(`/api/baby/${babyId}/sleep/detailed-save/`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify({ 
-            start_time: startTime, 
-            duration: duration, 
-            position: position 
-        })
-    }).then(res => {
-        if (res.ok) {
-            location.reload();
-        } else {
-            console.error('Failed to save sleep data');
-        }
-    });
+
+   const startTime = startTimeInput.value || localISOTime;
+   const duration = Math.round(sleepSecondsElapsed / 60);
+   const position = selectedSleepPosition;
+
+
+   fetch(`/api/baby/${babyId}/sleep/detailed-save/`, {
+       method: 'POST',
+       headers: {
+           'Content-Type': 'application/json',
+           'X-CSRFToken': getCookie('csrftoken')
+       },
+       body: JSON.stringify({
+           start_time: startTime,
+           duration: duration,
+           position: position
+       })
+   }).then(res => {
+       if (res.ok) {
+           location.reload();
+       } else {
+           console.error('Failed to save sleep data');
+       }
+   });
 }
+
 
 let currentMeasurementUnit = 'metric';
 

@@ -40,7 +40,7 @@
                     {{ last_diaper.status|title }} 
                     {% if last_diaper.color %}({{ last_diaper.color }}){% endif %}
                     <br>
-                    <strong>{{ last_diaper.time|timesince }} ago</strong>
+                    <strong>{{ last_diaper.time|date:"M d, h:i A" }}</strong>
                 </span>
                 {% else %}
                 <span style="font-size: 0.9em; color: #888;">No records yet</span>

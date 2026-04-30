@@ -856,19 +856,43 @@ def baby_logs(request, baby_id):
         'today_notes_count': today_notes_count,
     })
 
+# @csrf_exempt
+# @login_required
+# def save_detailed_feeding(request, baby_id):
+#     if request.method == 'POST':
+#         data = json.loads(request.body)
+#         baby = get_object_or_404(Baby, id=baby_id, parent=request.user)
+        
+#         Feeding.objects.create(
+#             baby=baby,
+#             side=data.get('side'),
+#             duration=data.get('duration')
+#         )
+#         return JsonResponse({'status': 'success'})
 @csrf_exempt
 @login_required
 def save_detailed_feeding(request, baby_id):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        baby = get_object_or_404(Baby, id=baby_id, parent=request.user)
-        
-        Feeding.objects.create(
-            baby=baby,
-            side=data.get('side'),
-            duration=data.get('duration')
-        )
-        return JsonResponse({'status': 'success'})
+   if request.method == 'POST':
+       data = json.loads(request.body)
+       baby = get_baby_if_accessible(request.user, baby_id)
+      
+       time_str = data.get('time')
+       if time_str:
+           # naive_time = datetime.strptime(time_str, '%Y-%m-%dT%H:%M')
+           # log_time = timezone.make_aware(naive_time, timezone.get_current_timezone())
+           # time_str = time_str.replace('Z', '+00:00')
+           # log_time = datetime.fromisoformat(time_str)
+           log_time = timezone.datetime.fromisoformat(time_str.replace('Z', '+00:00'))
+       else:
+           log_time = timezone.now()
+      
+       Feeding.objects.create(
+           baby=baby,
+           time=log_time,
+           side=data.get('side'),
+           duration=data.get('duration')
+       )
+       return JsonResponse({'status': 'success'})
 
 def calculate_next_nap(baby):
     last_sleep = SleepSession.objects.filter(
@@ -996,27 +1020,53 @@ def save_detailed_growth(request, baby_id):
         )
         return JsonResponse({'status': 'ok'})
     
+# @csrf_exempt
+# @login_required
+# def save_medical_notes(request, baby_id):
+#     if request.method == 'POST':
+#         baby = get_object_or_404(Baby, id=baby_id)
+#         data = json.loads(request.body)
+#         new_note = data.get('notes', '').strip()
+
+#         if new_note:
+#             now = datetime.now().strftime("%b %d, %Y - %I:%M %p")
+#             formatted_note = f"[{now}]\n{new_note}\n"
+            
+#             if baby.medical_notes:
+#                 baby.medical_notes = formatted_note + "\n---\n" + baby.medical_notes
+#             else:
+#                 baby.medical_notes = formatted_note
+            
+#             baby.save()
+#             return JsonResponse({'status': 'ok'})
+            
+#     return JsonResponse({'status': 'error'}, status=400)
 @csrf_exempt
 @login_required
 def save_medical_notes(request, baby_id):
-    if request.method == 'POST':
-        baby = get_object_or_404(Baby, id=baby_id)
-        data = json.loads(request.body)
-        new_note = data.get('notes', '').strip()
+   if request.method == 'POST':
+       baby = get_object_or_404(Baby, id=baby_id)
+       data = json.loads(request.body)
+       new_note = data.get('notes', '').strip()
 
-        if new_note:
-            now = datetime.now().strftime("%b %d, %Y - %I:%M %p")
-            formatted_note = f"[{now}]\n{new_note}\n"
-            
-            if baby.medical_notes:
-                baby.medical_notes = formatted_note + "\n---\n" + baby.medical_notes
-            else:
-                baby.medical_notes = formatted_note
-            
-            baby.save()
-            return JsonResponse({'status': 'ok'})
-            
-    return JsonResponse({'status': 'error'}, status=400)
+
+       if new_note:
+           # now = datetime.now().strftime("%b %d, %Y - %I:%M %p")
+           # formatted_note = f"[{now}]\n{new_note}\n"
+           now = timezone.localtime().strftime("%b %d, %Y - %I:%M %p")
+           formatted_note = f"[{now}]\n{new_note}\n"
+          
+           if baby.medical_notes:
+               baby.medical_notes = formatted_note + "\n---\n" + baby.medical_notes
+           else:
+               baby.medical_notes = formatted_note
+          
+           baby.save()
+           return JsonResponse({'status': 'ok'})
+          
+   return JsonResponse({'status': 'error'}, status=400)
+
+
     
 @csrf_exempt
 @login_required
@@ -1043,28 +1093,53 @@ def delete_medication(request, med_id):
         return JsonResponse({'status': 'ok'})
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
+# @csrf_exempt
+# def save_daily_note(request, baby_id):
+#     if request.method == 'POST':
+#         baby = get_object_or_404(Baby, id=baby_id)
+#         data = json.loads(request.body)
+        
+#         new_text = data.get('notes', '').strip()
+        
+#         if new_text:
+#             note, created = DailyNote.objects.get_or_create(baby=baby, date=date.today())
+            
+#             time_str = datetime.now().strftime('%I:%M %p')
+#             formatted_entry = f"• {time_str} - {new_text}"
+            
+#             if note.notes and not created:
+#                 note.notes += f"\n{formatted_entry}"
+#             else:
+#                 note.notes = formatted_entry
+                
+#             note.save()
+        
+#         return JsonResponse({'status': 'ok'})
 @csrf_exempt
 def save_daily_note(request, baby_id):
-    if request.method == 'POST':
-        baby = get_object_or_404(Baby, id=baby_id)
-        data = json.loads(request.body)
-        
-        new_text = data.get('notes', '').strip()
-        
-        if new_text:
-            note, created = DailyNote.objects.get_or_create(baby=baby, date=date.today())
-            
-            time_str = datetime.now().strftime('%I:%M %p')
-            formatted_entry = f"• {time_str} - {new_text}"
-            
-            if note.notes and not created:
-                note.notes += f"\n{formatted_entry}"
-            else:
-                note.notes = formatted_entry
-                
-            note.save()
-        
-        return JsonResponse({'status': 'ok'})
+   if request.method == 'POST':
+       baby = get_object_or_404(Baby, id=baby_id)
+       data = json.loads(request.body)
+      
+       new_text = data.get('notes', '').strip()
+      
+       if new_text:
+           # note, created = DailyNote.objects.get_or_create(baby=baby, date=date.today())
+           note, created = DailyNote.objects.get_or_create(baby=baby, date=timezone.localdate())
+          
+           # time_str = datetime.now().strftime('%I:%M %p')
+           # formatted_entry = f"• {time_str} - {new_text}"
+           time_str = timezone.localtime().strftime('%I:%M %p')
+           formatted_entry = f"• {time_str} - {new_text}"
+          
+           if note.notes and not created:
+               note.notes += f"\n{formatted_entry}"
+           else:
+               note.notes = formatted_entry
+              
+           note.save()
+      
+       return JsonResponse({'status': 'ok'})
 
 def download_report_pdf(request, baby_id):
     baby = get_object_or_404(Baby, id=baby_id)

@@ -276,13 +276,9 @@ function saveDiaper(babyId) {
     });
 }
 
-// Replace both existing quickStartSleep functions with this single, corrected one:
 function quickStartSleep(babyId, preferredPosition) {
-    // 1. Open the Panel using your existing openPanel function
     openPanel('Sleep', '😴', 'sleep-panel');
 
-    // 2. Set the sleeping position automatically
-    // Finds buttons inside the position selector and clicks the one matching the preferred position
         const positionButtons = document.querySelectorAll('#sleep-position-selector .diaper-type-btn');
         positionButtons.forEach(btn => {
             if (btn.innerText.trim().includes(preferredPosition)) {
@@ -290,9 +286,7 @@ function quickStartSleep(babyId, preferredPosition) {
             }
         });
 
-    // 3. Automatically start the timer
         const timerBtn = document.getElementById('sleep-timer-btn');
-    // We check if the button says "Start" so we don't accidentally STOP a timer if it's already running
     if (timerBtn && timerBtn.innerText.includes('Start')) {
             toggleSleepTimer(); 
         }

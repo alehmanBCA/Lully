@@ -44,6 +44,14 @@ def get_accessible_babies(user):
         Q(household__memberships__user=user, household__memberships__is_active=True)
     ).distinct().select_related('household')
 
+
+def get_baby_if_accessible(user, baby_id):
+    """Return the Baby if the user is the parent or an active household member; raise 404 otherwise."""
+    return get_object_or_404(
+        get_accessible_babies(user),
+        id=baby_id
+    )
+
 def get_user_household(user):
     membership = HouseholdMember.objects.select_related('household').filter(user=user, is_active=True).first()
     if membership:
@@ -447,8 +455,7 @@ def profile(request):
 
     name = user.first_name or user.get_username()
     
-    # babies = get_accessible_babies(user)
-    babies = Baby.objects.filter(parent=request.user)
+    babies = get_accessible_babies(user)
     form = BabyForm()
     household_members = HouseholdMember.objects.none()
     can_manage_members = False
@@ -478,10 +485,6 @@ def remove_household_member(request, member_id):
         messages.error(request, 'No household found.')
         return redirect('profile')
 
-    if not can_manage_household(request.user, household):
-        messages.error(request, 'Only household owners can remove members.')
-        return redirect('profile')
-
     membership = get_object_or_404(
         HouseholdMember.objects.select_related('user'),
         id=member_id,
@@ -489,22 +492,31 @@ def remove_household_member(request, member_id):
         is_active=True,
     )
 
-    if membership.user_id == request.user.id:
-        messages.error(request, 'You cannot remove yourself.')
+    is_self_remove = membership.user_id == request.user.id
+
+    if not is_self_remove and not can_manage_household(request.user, household):
+        messages.error(request, 'Only household owners can remove members.')
         return redirect('profile')
 
     if membership.role == 'owner' or membership.user_id == household.owner_id:
-        messages.error(request, 'Owner accounts cannot be removed.')
+        if is_self_remove:
+            messages.error(request, 'Household owners cannot leave their own household.')
+        else:
+            messages.error(request, 'Owner accounts cannot be removed.')
         return redirect('profile')
 
     membership.is_active = False
     membership.save(update_fields=['is_active'])
-    messages.success(request, f"Removed {membership.user.get_username()} from the household.")
+
+    if is_self_remove:
+        messages.success(request, 'You left the household.')
+    else:
+        messages.success(request, f"Removed {membership.user.get_username()} from the household.")
     return redirect('profile')
 
 @login_required
 def delete_baby(request, baby_id):
-    baby = get_object_or_404(Baby, id=baby_id, parent=request.user)
+    baby = get_baby_if_accessible(request.user, baby_id)
     
     if request.method == 'POST':
         baby.delete()
@@ -796,7 +808,7 @@ def get_weight_percentile(weight):
 
 @login_required
 def baby_logs(request, baby_id):
-    baby = get_object_or_404(Baby, id=baby_id, parent=request.user)
+    baby = get_baby_if_accessible(request.user, baby_id)
     next_nap = calculate_next_nap(baby)
 
     feeding_history = Feeding.objects.filter(baby=baby).order_by('-time')[:5]
@@ -856,43 +868,30 @@ def baby_logs(request, baby_id):
         'today_notes_count': today_notes_count,
     })
 
-# @csrf_exempt
-# @login_required
-# def save_detailed_feeding(request, baby_id):
-#     if request.method == 'POST':
-#         data = json.loads(request.body)
-#         baby = get_object_or_404(Baby, id=baby_id, parent=request.user)
-        
-#         Feeding.objects.create(
-#             baby=baby,
-#             side=data.get('side'),
-#             duration=data.get('duration')
-#         )
-#         return JsonResponse({'status': 'success'})
 @csrf_exempt
 @login_required
 def save_detailed_feeding(request, baby_id):
-   if request.method == 'POST':
-       data = json.loads(request.body)
-       baby = get_baby_if_accessible(request.user, baby_id)
-      
-       time_str = data.get('time')
-       if time_str:
-           # naive_time = datetime.strptime(time_str, '%Y-%m-%dT%H:%M')
-           # log_time = timezone.make_aware(naive_time, timezone.get_current_timezone())
-           # time_str = time_str.replace('Z', '+00:00')
-           # log_time = datetime.fromisoformat(time_str)
-           log_time = timezone.datetime.fromisoformat(time_str.replace('Z', '+00:00'))
-       else:
-           log_time = timezone.now()
-      
-       Feeding.objects.create(
-           baby=baby,
-           time=log_time,
-           side=data.get('side'),
-           duration=data.get('duration')
-       )
-       return JsonResponse({'status': 'success'})
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        baby = get_baby_if_accessible(request.user, baby_id)
+        
+        time_str = data.get('time')
+        if time_str:
+            # naive_time = datetime.strptime(time_str, '%Y-%m-%dT%H:%M')
+            # log_time = timezone.make_aware(naive_time, timezone.get_current_timezone())
+            # time_str = time_str.replace('Z', '+00:00') 
+            # log_time = datetime.fromisoformat(time_str)
+            log_time = timezone.datetime.fromisoformat(time_str.replace('Z', '+00:00'))
+        else:
+            log_time = timezone.now()
+        
+        Feeding.objects.create(
+            baby=baby,
+            time=log_time,
+            side=data.get('side'),
+            duration=data.get('duration')
+        )
+        return JsonResponse({'status': 'success'})
 
 def calculate_next_nap(baby):
     last_sleep = SleepSession.objects.filter(
@@ -959,9 +958,9 @@ def save_detailed_diaper(request, baby_id):
         time_str = data.get('time')
         if time_str:
             naive_time = datetime.strptime(time_str, '%Y-%m-%dT%H:%M')
-            log_time = timezone.make_aware(naive_time)   # ← fix: make it timezone-aware
+            log_time = timezone.make_aware(naive_time)
         else:
-            log_time = timezone.now()                    # ← fix: use timezone.now() not datetime.now()
+            log_time = timezone.now()
             
         result = DiaperLog.objects.create(
             baby=baby,
@@ -1020,53 +1019,29 @@ def save_detailed_growth(request, baby_id):
         )
         return JsonResponse({'status': 'ok'})
     
-# @csrf_exempt
-# @login_required
-# def save_medical_notes(request, baby_id):
-#     if request.method == 'POST':
-#         baby = get_object_or_404(Baby, id=baby_id)
-#         data = json.loads(request.body)
-#         new_note = data.get('notes', '').strip()
-
-#         if new_note:
-#             now = datetime.now().strftime("%b %d, %Y - %I:%M %p")
-#             formatted_note = f"[{now}]\n{new_note}\n"
-            
-#             if baby.medical_notes:
-#                 baby.medical_notes = formatted_note + "\n---\n" + baby.medical_notes
-#             else:
-#                 baby.medical_notes = formatted_note
-            
-#             baby.save()
-#             return JsonResponse({'status': 'ok'})
-            
-#     return JsonResponse({'status': 'error'}, status=400)
 @csrf_exempt
 @login_required
 def save_medical_notes(request, baby_id):
-   if request.method == 'POST':
-       baby = get_object_or_404(Baby, id=baby_id)
-       data = json.loads(request.body)
-       new_note = data.get('notes', '').strip()
+    if request.method == 'POST':
+        baby = get_object_or_404(Baby, id=baby_id)
+        data = json.loads(request.body)
+        new_note = data.get('notes', '').strip()
 
-
-       if new_note:
-           # now = datetime.now().strftime("%b %d, %Y - %I:%M %p")
-           # formatted_note = f"[{now}]\n{new_note}\n"
-           now = timezone.localtime().strftime("%b %d, %Y - %I:%M %p")
-           formatted_note = f"[{now}]\n{new_note}\n"
-          
-           if baby.medical_notes:
-               baby.medical_notes = formatted_note + "\n---\n" + baby.medical_notes
-           else:
-               baby.medical_notes = formatted_note
-          
-           baby.save()
-           return JsonResponse({'status': 'ok'})
-          
-   return JsonResponse({'status': 'error'}, status=400)
-
-
+        if new_note:
+            # now = datetime.now().strftime("%b %d, %Y - %I:%M %p")
+            # formatted_note = f"[{now}]\n{new_note}\n"
+            now = timezone.localtime().strftime("%b %d, %Y - %I:%M %p")
+            formatted_note = f"[{now}]\n{new_note}\n"
+            
+            if baby.medical_notes:
+                baby.medical_notes = formatted_note + "\n---\n" + baby.medical_notes
+            else:
+                baby.medical_notes = formatted_note
+            
+            baby.save()
+            return JsonResponse({'status': 'ok'})
+            
+    return JsonResponse({'status': 'error'}, status=400)
     
 @csrf_exempt
 @login_required
@@ -1093,53 +1068,31 @@ def delete_medication(request, med_id):
         return JsonResponse({'status': 'ok'})
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
-# @csrf_exempt
-# def save_daily_note(request, baby_id):
-#     if request.method == 'POST':
-#         baby = get_object_or_404(Baby, id=baby_id)
-#         data = json.loads(request.body)
-        
-#         new_text = data.get('notes', '').strip()
-        
-#         if new_text:
-#             note, created = DailyNote.objects.get_or_create(baby=baby, date=date.today())
-            
-#             time_str = datetime.now().strftime('%I:%M %p')
-#             formatted_entry = f"• {time_str} - {new_text}"
-            
-#             if note.notes and not created:
-#                 note.notes += f"\n{formatted_entry}"
-#             else:
-#                 note.notes = formatted_entry
-                
-#             note.save()
-        
-#         return JsonResponse({'status': 'ok'})
 @csrf_exempt
 def save_daily_note(request, baby_id):
-   if request.method == 'POST':
-       baby = get_object_or_404(Baby, id=baby_id)
-       data = json.loads(request.body)
-      
-       new_text = data.get('notes', '').strip()
-      
-       if new_text:
-           # note, created = DailyNote.objects.get_or_create(baby=baby, date=date.today())
-           note, created = DailyNote.objects.get_or_create(baby=baby, date=timezone.localdate())
-          
-           # time_str = datetime.now().strftime('%I:%M %p')
-           # formatted_entry = f"• {time_str} - {new_text}"
-           time_str = timezone.localtime().strftime('%I:%M %p')
-           formatted_entry = f"• {time_str} - {new_text}"
-          
-           if note.notes and not created:
-               note.notes += f"\n{formatted_entry}"
-           else:
-               note.notes = formatted_entry
-              
-           note.save()
-      
-       return JsonResponse({'status': 'ok'})
+    if request.method == 'POST':
+        baby = get_object_or_404(Baby, id=baby_id)
+        data = json.loads(request.body)
+        
+        new_text = data.get('notes', '').strip()
+        
+        if new_text:
+            # note, created = DailyNote.objects.get_or_create(baby=baby, date=date.today())
+            note, created = DailyNote.objects.get_or_create(baby=baby, date=timezone.localdate())
+            
+            # time_str = datetime.now().strftime('%I:%M %p')
+            # formatted_entry = f"• {time_str} - {new_text}"
+            time_str = timezone.localtime().strftime('%I:%M %p')
+            formatted_entry = f"• {time_str} - {new_text}"
+            
+            if note.notes and not created:
+                note.notes += f"\n{formatted_entry}"
+            else:
+                note.notes = formatted_entry
+                
+            note.save()
+        
+        return JsonResponse({'status': 'ok'})
 
 def download_report_pdf(request, baby_id):
     baby = get_object_or_404(Baby, id=baby_id)

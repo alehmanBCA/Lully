@@ -81,6 +81,7 @@ class Baby(models.Model):
     
     name = models.CharField(max_length=100)
     parent = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    household = models.ForeignKey(Household, on_delete=models.SET_NULL, null=True, blank=True, related_name='babies')
     birth_date = models.DateField()
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True)
     weight_kg = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
@@ -113,8 +114,8 @@ class UserPreference(models.Model):
     default_max_heart_rate = models.IntegerField(default=160)
     default_min_temperature = models.FloatField(default=36.0)
     default_max_temperature = models.FloatField(default=38.0)
-    temperature_unit = models.CharField(max_length=1, choices=TEMPERATURE_UNIT_CHOICES, default='c')
-    weight_unit = models.CharField(max_length=2, choices=WEIGHT_UNIT_CHOICES, default='kg')
+    temperature_unit = models.CharField(max_length=1, choices=TEMPERATURE_UNIT_CHOICES, default='f')
+    weight_unit = models.CharField(max_length=2, choices=WEIGHT_UNIT_CHOICES, default='lb')
     visible_metrics = models.JSONField(default=dict, blank=True)
 
     def __str__(self):

@@ -15,7 +15,7 @@
   <div class="app-shell">
     <main class="content">
       {% if messages %}
-        <div class="auth-messages" style="margin-bottom: 18px;">
+        <div class="profile-notice auth-messages">
           <ul>
             {% for message in messages %}
               <li>{{ message }}</li>
@@ -23,11 +23,8 @@
           </ul>
         </div>
       {% endif %}
-      <!-- Angel's Stuff -->
-       <!-- <div class="controls">
-        <button class="btn add" onclick="toggleModal(true)">+ Add Baby Profile</button>
-      </div> -->
-      <div class="controls controls-spaced">
+
+      <div class="controls controls-spaced profile-desktop-controls">
         <button class="btn add" onclick="toggleModal(true)">
           <span>+</span> Add Baby Profile
         </button>
@@ -148,7 +145,12 @@
                 <div class="member-chip">
                   <span class="member-chip__label">{{ member.user.first_name|default:member.user.username }}</span>
                   <span class="member-role member-role--{{ member.role }}">{{ member.get_role_display }}</span>
-                  {% if can_manage_members and member.user_id != request.user.id and member.role != 'owner' and member.user_id != household.owner_id %}
+                  {% if member.user_id == request.user.id and member.role != 'owner' and member.user_id != household.owner_id %}
+                    <form method="POST" action="{% url 'remove_household_member' member.id %}" class="member-remove-form" onsubmit="return confirm('Are you sure you want to leave this family account?');">
+                      {% csrf_token %}
+                      <button type="submit" class="member-remove-btn">Leave</button>
+                    </form>
+                  {% elif can_manage_members and member.user_id != request.user.id and member.role != 'owner' and member.user_id != household.owner_id %}
                     <form method="POST" action="{% url 'remove_household_member' member.id %}" class="member-remove-form" onsubmit="return confirm('Remove this member from your family account?');">
                       {% csrf_token %}
                       <button type="submit" class="member-remove-btn">Remove</button>

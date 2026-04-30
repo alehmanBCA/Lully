@@ -1,0 +1,3 @@
+# Python dependencies for Lully
+# Keep this minimal for now; add more entries if you decide to track the full environment.
+weasyprint==68.1

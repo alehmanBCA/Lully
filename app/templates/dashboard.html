@@ -30,6 +30,65 @@
       </div>
     </header>
 
+    <section class="mobile-landing-screen" aria-label="Mobile dashboard preview">
+      <div class="mobile-app-bar">
+        <div class="mobile-app-brand">
+          <img src="{% static 'images/logo.png' %}" alt="Lully logo" class="mobile-app-logo">
+          <div>
+            <strong>Lully</strong>
+            <span>smart baby monitoring</span>
+          </div>
+        </div>
+        <a class="mobile-app-link" href="{% url 'login' %}">Log in</a>
+      </div>
+
+      <div class="mobile-hero-card">
+        <p class="mobile-kicker">Today at a glance</p>
+        <h1 class="mobile-title">Your baby’s important vitals in one calm place.</h1>
+        <p class="mobile-subtitle">A clean dashboard built for quick check-ins, gentle alerts, and less stress.</p>
+
+        <div class="mobile-stat-row">
+          <div class="mobile-stat-pill">
+            <span>Heart Rate</span>
+            <strong>128 bpm</strong>
+          </div>
+          <div class="mobile-stat-pill">
+            <span>Temp</span>
+            <strong>98.4 °F</strong>
+          </div>
+        </div>
+
+        <a class="mobile-primary-action" href="{% url 'signup' %}">Start monitoring</a>
+      </div>
+
+      <div class="mobile-mini-grid">
+        <div class="mobile-mini-card accent-blue">
+          <span>Always current</span>
+          <strong>Fast refresh</strong>
+        </div>
+        <div class="mobile-mini-card accent-pink">
+          <span>Sleep view</span>
+          <strong>Easy glance</strong>
+        </div>
+        <div class="mobile-mini-card accent-orange">
+          <span>Family access</span>
+          <strong>Easy sharing</strong>
+        </div>
+      </div>
+
+      <div class="mobile-bottom-panel">
+        <div class="mobile-bottom-card">
+          <span>What you get</span>
+          <p>Fast check-ins, clear vitals, and a calmer way to watch over baby.</p>
+        </div>
+        <div class="mobile-bottom-card mobile-bottom-card--accent">
+          <span>Next step</span>
+          <p>Create an account or log in to start monitoring from any phone.</p>
+          <a class="mobile-secondary-action" href="{% url 'login' %}">I already have an account</a>
+        </div>
+      </div>
+    </section>
+
     <section class="hero-grid">
       <div class="hero-copy">
           <h1 class="hero-title">A simple way to see how your baby is doing.</h1>
@@ -144,6 +203,14 @@
     </section>
 
       <footer class="page-footer">© 2026 Lully. Simple monitoring for parents.</footer>
+      <div class='about-us-section'>
+        <h2>Creators of Lully</h2>
+        <div class='lully-creators'>
+          <a class='lully-creator' href='https://www.linkedin.com/in/aiden-lehman-633856396/' target='_blank'>Aiden Lehman</a>
+          <a class='lully-creator' href='https://github.com/AngelSSr69' target='_blank'>Angel Salazar</a>
+          <a class='lully-creator' href="https://github.com/maybe-zala" target="_blank">Naizala Farr</a> 
+        </div>
+      </div>
   </main>
   <script src="{% static 'js/visual-polish.js' %}" defer></script>
 </body>

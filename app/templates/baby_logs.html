@@ -7,11 +7,12 @@
     <title>{{ baby.name }}'s Logs</title>
     <link rel="stylesheet" href="{% static 'css/baby_logs.css' %}">
 </head>
-<body>
+<body class="baby-logs-page">
+    {% include 'nav/site_nav.html' %}
     <div class="main-container">
         <div class="header-container">
             <h1>{{ baby.name }}'s Daily Log</h1>
-            <a href="{% url 'home' %}">Back to Dashboard</a>
+            <a class="back-link" href="{% url 'profile' %}">Back to Profile</a>
         </div>
 
         <div class="quick-actions">
@@ -63,7 +64,7 @@
             </div>
         </div>
 
-        <div id="timeline" data-api-url="/api/baby/{{ baby.id }}/timeline/" style="position: relative; margin:20px 0; height:50px; background:#eee; border-radius:10px; overflow: hidden;"></div>
+        <div id="timeline" class="timeline-bar" data-api-url="/api/baby/{{ baby.id }}/timeline/"></div>
 
 
         <div class="log-grid">

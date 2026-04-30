@@ -15,39 +15,52 @@
             <a class="back-link" href="{% url 'profile' %}">Back to Profile</a>
         </div>
 
-        <div class="quick-actions" data-api-url="/api/quick-log/{{ baby.id }}/">
-            {% with api_url='/api/quick-log/'|add:baby.id|add:'/' %}
-                <button onclick="quickLog('feed', '{{ api_url }}')">
-                    <span class="btn-icon">🍼</span> Feed Now
-                </button>
-                <button onclick="quickLog('sleep', '{{ api_url }}')">
-                    <span class="btn-icon">😴</span> Start Sleep
-                </button>
-                <button onclick="quickLog('diaper', '{{ api_url }}')">
-                    <span class="btn-icon">🧷</span> Diaper
-                </button>
-            {% endwith %}
+        <div class="quick-actions">
+            <div class="action-card" onclick="quickStartFeeding()" role="button">
+                <span class="action-icon">🍼</span>
+                <p>Feed Now</p>
+            </div>
+            
+            <div class="action-card" onclick="quickSaveDiaper('{{ baby.id }}')" role="button" tabindex="0">
+                <span class="action-icon">🧷</span>
+                <p>Diaper</p>
+            </div>
+            
+            <div class="action-card" onclick="quickStartSleep('{{ baby.id }}', '{{ preferred_position }}')" role="button">
+                <span class="action-icon">😴</span>
+                <p>Nap</p>
+            </div>
         </div>
 
         <div class="stats-banner-container">
-            <div class="stat-banner nap-banner">
-                <strong>😴 Next Nap Prediction:</strong><br>
-                {% if next_nap %}
-                    {{ next_nap|date:"h:i A" }}
+            <div class="stat-banner diaper-banner">
+                <strong>🧷 Last Diaper Change:</strong><br>
+                
+                {% if last_diaper %}
+                <span style="font-size: 0.9em; color: #555;">
+                    {{ last_diaper.status|title }} 
+                    {% if last_diaper.color %}({{ last_diaper.color }}){% endif %}
+                    <br>
+                    <strong>{{ last_diaper.time|timesince }} ago</strong>
+                </span>
                 {% else %}
-                    No sleep data yet
+                <span style="font-size: 0.9em; color: #888;">No records yet</span>
                 {% endif %}
             </div>
-
-            <div class="stat-banner feed-banner">
-                <div style="margin-bottom: 5px;">
-                    <strong>🍼 Last side:</strong> 
-                    <span>{% if last_feed %}{{ last_feed.get_side_display }}{% else %}No data{% endif %}</span>
-                </div>
-                <div>
-                    <strong>⚖️ Weight:</strong> 
-                    <span>{{ baby.weight_kg|default:"--" }} kg ({{ percentile }}th percentile)</span>
-                </div>
+            
+            <div class="stat-banner medication-banner">
+                <strong>💊 Medications Today:</strong><br>
+                {% if medications %}
+                    {% for med in medications %}
+                    <div>
+                        {{ med.name }}
+                        {% if med.dosage %} - {{ med.dosage }}{% endif %}
+                        <small>({{ med.times_per_day }}x/day)</small>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    No medications scheduled
+                {% endif %}
             </div>
         </div>
 
@@ -60,6 +73,7 @@
                     <span class="icon">😴</span>
                     <h3>Sleep</h3>
                 </div>
+                <p>Track nap times and sleep positions</p>
             </div>
 
             <div class="log-card" onclick="openPanel('Feeding', '🍼', 'feeding-panel')">
@@ -67,10 +81,7 @@
                     <span class="icon">🍼</span>
                     <h3>Feeding</h3>
                 </div>
-                <div class="card-stats">
-                    <div>Last: <span>{% if last_feed %}{{ last_feed.time|date:"h:i A" }} ({{ last_feed.get_side_display }}){% else %}No data{% endif %}</span></div>
-                    <div>Daily Total: <span>{{ feeding_count }}</span></div>
-                </div>
+                <p>Log nursing, bottle, or solid intake</p>
             </div>
 
             <div class="log-card" onclick="openPanel('Diaper', '🧷', 'diaper-panel')">
@@ -86,6 +97,7 @@
                     <span class="icon">📏</span>
                     <h3>Growth</h3>
                 </div>
+                <p>Track weight, height, and head size</p>
             </div>
 
             <div class="log-card" onclick="openPanel('Reports', '📊', 'report-panel')">
@@ -93,6 +105,7 @@
                     <span class="icon">📊</span>
                     <h3>Today's Report</h3>
                 </div>
+                <p>View daily summaries and download PDFs</p>
             </div>
             
             <div class="log-card" onclick="openPanel('Medical', '⚕️', 'medical-panel')">
@@ -100,6 +113,7 @@
                     <span class="icon">⚕️</span>
                     <h3>Medical</h3>
                 </div>
+                <p>Manage medications and health notes</p>
             </div>
         </div>
     </div> 
@@ -146,7 +160,7 @@
                 <div class="history-section" style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px;">
                     <h4 style="margin-bottom: 10px; color: #03446F;">Recent Sleep History</h4>
                     <ul style="list-style: none; padding: 0; font-size: 14px; color: #666;">
-                        {% for sleep in sleep_history %}
+                        {% for sleep in sleep_history|dictsortreversed:"start_time" %}
                         <li style="padding: 8px 0; border-bottom: 1px solid #f9f9f9;">
                             {{ sleep.start_time|date:"M d, h:i A" }} — {{ sleep.position }} ({{ sleep.duration }}m)
                         </li>
@@ -191,11 +205,10 @@
             </div>
             
             <div id="diaper-panel" class="panel-section" style="display: none;">
-                <!-- <h3 style="color: #03446F; margin-bottom: 15px;">🧷 Diaper Log</h3> -->
                 
                 <div class="form-group" style="margin-bottom: 20px;">
-                    <label style="display: block; font-weight: bold; margin-bottom: 8px;">Time:</label>
-                    <input type="datetime-local" id="diaper-time" class="time-input" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #d1e3f0;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 8px;">Time of Change:</label>
+                    <input type="datetime-local" id="diaper-time" class="form-control">
                 </div>
                 
                 <div class="form-group" style="margin-bottom: 20px;">
@@ -204,7 +217,6 @@
                         <button class="status-btn active" onclick="setDiaperStatus('Pee', this)">Pee</button>
                         <button class="status-btn" onclick="setDiaperStatus('Poop', this)">Poop</button>
                         <button class="status-btn" onclick="setDiaperStatus('Both', this)">Both</button>
-                        <button class="status-btn" onclick="setDiaperStatus('Clean', this)">Clean</button>
                     </div>
                 </div>
                 
@@ -225,12 +237,20 @@
                     <h4 style="color: #03446F; margin-bottom: 10px;">Recent Diapers</h4>
                     {% for diaper in diaper_history %}
                     <div class="history-item" style="background: #f8fbff; padding: 10px; border-radius: 8px; border-left: 4px solid #03446F; margin-bottom: 8px;">
+                        
+                        {% if forloop.first %}
+                        <span style="font-size: 0.75em; color: #fff; background: #03446F; padding: 2px 6px; border-radius: 5px; margin-right: 6px;">
+                            Latest
+                        </span>
+                        {% endif %}
+                        
                         <strong>{{ diaper.status }}</strong> 
                         {% if diaper.color and diaper.status != 'Clean' %}- {{ diaper.color }}{% endif %}
-                        <span style="float: right; color: #666; font-size: 0.9em;">{{ diaper.time|date:"g:i A" }}</span>
+                        
+                        <div style="color: #666; font-size: 0.85em; margin-top: 4px;">
+                            {{ diaper.time|date:"M d, h:i A" }} 
+                        </div>
                     </div>
-                    {% empty %}
-                    <p style="color: #666;">No diapers logged yet.</p>
                     {% endfor %}
                 </div>
             </div>
@@ -300,23 +320,19 @@
                 
                 <div class="form-group" style="margin-bottom: 20px;">
                     <label style="display: block; font-weight: bold; margin-bottom: 8px;">Medical Notes / Symptoms:</label>
-                    <textarea id="medical-notes" class="notes-input" style="width: 100%; height: 100px; padding: 10px; border-radius: 8px; border: 1px solid #d1e3f0;">{{ baby.medical_notes }}</textarea>
-                    <button class="save-btn" onclick="saveMedicalNotes('{{ baby.id }}')" style="margin-top: 10px;">Save Notes</button>
+                    <textarea id="medical-notes" class="medical-textarea" placeholder="Type new symptoms or observations..."></textarea>
                     
+                    <button onclick="saveMedicalNotes('{{ baby.id }}')" class="save-btn">Save Notes</button>
+
                     <button onclick="toggleNotes()" style="margin-top:10px;">
                         📋 View History
                     </button>
                     
                     <div id="notesArchive" style="display:none; margin-top:10px;">
-                        <h4>Medical Notes History</h4>
-                        {% for note in medical_notes_history %}
-                        <div style="background:#f5f5f5; padding:10px; margin-bottom:8px; border-radius:8px;">
-                            <small>{{ note.date }}</small><br>
-                            {{ note.notes }}
+                        <h4 style="margin-top: 20px; color: #03446F;">Medical Notes History</h4>
+                        <div id="medical-notes-display" class="notes-archive" style="white-space: pre-wrap;">
+                            {{ baby.medical_notes|default:"No history recorded." }}
                         </div>
-                        {% empty %}
-                        <p>No medical notes yet.</p>
-                        {% endfor %}
                     </div>
                 </div>
 
@@ -348,41 +364,96 @@
                         <div style="font-size: 0.85em; color: #666; margin-top: 4px;">
                             ↻ {{ med.times_per_day }} times/day, {{ med.days_per_week }} days/week
                         </div>
+                        <button onclick="deleteMedication('{{ med.id }}')" class="delete-btn">
+                            Delete
+                        </button>
                     </li>
                     {% empty %}
                     <p style="color: #666; font-size: 0.9em;">No active medications.</p>
                     {% endfor %}
                 </ul>
             </div>
-
+            
             <div id="report-panel" class="panel-section" style="display: none;">
-                
-                <div style="background: #e0f2ff; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
-                    <h4 style="margin-top: 0; color: #03446F;">📝 Daily Notes</h4>
-                    <textarea id="daily-notes" class="form-control" rows="5" placeholder="Write any notes, moods, or observations about today...">{% for note in baby.daily_notes.all %}{% if note.date == today %}{{ note.notes }}{% endif %}{% endfor %}</textarea>
-                    <button onclick="saveDailyNotes('{{ baby.id }}')" class="save-btn" style="margin-top: 10px;">Save Notes</button>
+
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 8px;">Add a Daily Note:</label>
+                    <textarea id="daily-notes" class="notes-input" placeholder="Type a new note here..." style="width: 100%; height: 100px; padding: 10px; border-radius: 8px; border: 1px solid #d1e3f0;"></textarea>
+                    <button class="save-btn" onclick="saveDailyNotes('{{ baby.id }}')" style="margin-top: 10px;">Save to Archive</button>
+                </div>
+
+                <div class="history-section" style="margin-bottom: 30px;">
+                    <h4 style="color: #03446F; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Notes Archive</h4>
+                    <ul style="list-style: none; padding: 0; max-height: 200px; overflow-y: auto;">
+                        {% for past_note in daily_notes_history %}
+                        <li style="background: #f8fbff; padding: 10px; border-radius: 8px; border: 1px solid #d1e3f0; border-left: 4px solid #03446F; margin-bottom: 8px;">
+                            <strong style="color: #03446F; font-size: 0.9em;">{{ past_note.date|date:"M d, Y" }}</strong>
+                            <div style="font-size: 0.9em; color: #444; margin-top: 4px; white-space: pre-wrap;">{{ past_note.notes }}</div>
+                        </li>
+                        {% empty %}
+                        <p style="color: #666; font-size: 0.9em; font-style: italic;">No past notes archived yet.</p>
+                        {% endfor %}
+                    </ul>
                 </div>
                 
                 <h4 style="color: #03446F; margin-bottom: 15px;">Summary for Today</h4>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 30px;">
+                    
+                    {% if today_feedings_count > 0 %}
                     <div style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #d1e3f0; text-align: center;">
                         <div style="font-size: 24px;">🍼</div>
-                        <strong>Feedings</strong>
+                        <strong>{{ today_feedings_count }} Feedings</strong>
                     </div>
+                    {% endif %}
+                    
+                    {% if today_diapers_count > 0 %}
                     <div style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #d1e3f0; text-align: center;">
                         <div style="font-size: 24px;">🧷</div>
-                        <strong>Diapers</strong>
+                        <strong>{{ today_diapers_count }} Diapers</strong>
                     </div>
+                    {% endif %}
+                    
+                    {% if today_sleeps_count > 0 %}
                     <div style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #d1e3f0; text-align: center;">
                         <div style="font-size: 24px;">😴</div>
-                        <strong>Naps</strong>
+                        <strong>{{ today_sleeps_count }} Naps</strong>
                     </div>
+                    {% endif %}
+                    
+                    {% if today_growth_count > 0 %}
+                    <div style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #d1e3f0; text-align: center;">
+                        <div style="font-size: 24px;">📏</div>
+                        <strong>{{ today_growth_count }} Growth Logs</strong>
+                    </div>
+                    {% endif %}
+
+                    {% if today_meds_count > 0 %}
+                    <div style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #d1e3f0; text-align: center;">
+                        <div style="font-size: 24px;">💊</div>
+                        <strong>{{ today_meds_count }} Medications</strong>
+                    </div>
+                    {% endif %}
+                    
+                    {% if today_notes_count %}
+                    <div style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #d1e3f0; text-align: center;">
+                        <div style="font-size: 24px;">📝</div>
+                        <strong>Daily Note Added</strong>
+                    </div>
+                    {% endif %}
+                    
+                    {% if not today_feedings_count and not today_diapers_count and not today_sleeps_count and not today_growth_count and not today_meds_count and not today_notes_count %}
+                    <div style="grid-column: span 2; text-align: center; padding: 20px; background: #f8fbff; border-radius: 10px; color: #666;">
+                        <em>No activities logged for today yet.</em>
+                    </div>
+                    {% endif %}
+                
                 </div>
                 
                 <a href="{% url 'download_report_pdf' baby.id %}" class="save-btn" style="display: block; text-align: center; text-decoration: none; background: #28a745;">
                     📄 Download Today's PDF Report
                 </a>
             </div>
+
         </div>
     </div>
     <script src="{% static 'js/baby_logs.js' %}" defer></script>

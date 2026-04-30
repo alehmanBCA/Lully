@@ -26,6 +26,7 @@ urlpatterns = [
     path('api/baby/<int:baby_id>/growth/save/', views.save_detailed_growth, name='save_detailed_growth'),
     path('api/baby/<int:baby_id>/medical/notes/save/', views.save_medical_notes, name='save_medical_notes'),
     path('api/baby/<int:baby_id>/medical/medication/add/', views.add_medication, name='add_medication'),
+    path('api/medication/<int:med_id>/delete/', views.delete_medication, name='delete_medication'),
     path('api/baby/<int:baby_id>/note/save/', views.save_daily_note, name='save_daily_note'),
     path('baby/<int:baby_id>/report/pdf/', views.download_report_pdf, name='download_report_pdf'),
     

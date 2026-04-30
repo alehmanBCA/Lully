@@ -6,28 +6,27 @@
     <style>
         body { font-family: Helvetica, sans-serif; color: #333; margin: 0; padding: 20px; }
         h1 { color: #03446F; border-bottom: 2px solid #03446F; padding-bottom: 10px; }
-        h2 { color: #083049; margin-top: 30px; font-size: 18px; }
+        h2 { color: #083049; margin-top: 25px; font-size: 18px; border-left: 5px solid #03446F; padding-left: 10px; }
         .log-section { margin-bottom: 20px; }
-        .log-item { background: #f9f9f9; padding: 10px; margin-bottom: 5px; border-radius: 5px; border-left: 4px solid #4da6ff; }
-        .notes-box { background: #e0f2ff; padding: 15px; border-radius: 5px; margin-top: 20px; }
+        .log-item { background: #f9f9f9; padding: 10px; margin-bottom: 5px; border-radius: 5px; border-left: 4px solid #4da6ff; font-size: 14px; }
+        .notes-box { background: #e0f2ff; padding: 15px; border-radius: 5px; margin-top: 20px; border: 1px solid #b3d7ff; }
     </style>
 </head>
 <body>
-
-    <h1>Daily Report for {{ baby.name }}</h1>
+    <h1>Daily Report: {{ baby.name }}</h1>
     <p><strong>Date:</strong> {{ today|date:"F d, Y" }}</p>
 
     {% if note and note.notes %}
     <div class="notes-box">
         <h2>📝 Parent's Notes</h2>
-        <p>{{ note.notes }}</p>
+        <p>{{ note.notes|linebreaksbr }}</p>
     </div>
     {% endif %}
 
     <div class="log-section">
         <h2>🍼 Feedings</h2>
         {% for feed in feedings %}
-            <div class="log-item">{{ feed.time|date:"h:i A" }} - {{ feed.get_side_display }} ({{ feed.duration }} min)</div>
+            <div class="log-item"><strong>{{ feed.time|date:"h:i A" }}</strong> - {{ feed.get_side_display }} ({{ feed.duration }} min)</div>
         {% empty %}
             <p>No feedings logged today.</p>
         {% endfor %}
@@ -36,20 +35,37 @@
     <div class="log-section">
         <h2>🧷 Diapers</h2>
         {% for diaper in diapers %}
-            <div class="log-item">{{ diaper.time|date:"h:i A" }} - {{ diaper.type }}</div>
+            <div class="log-item"><strong>{{ diaper.time|date:"h:i A" }}</strong> - {{ diaper.status }} {% if diaper.color %}({{ diaper.color }}){% endif %}</div>
         {% empty %}
             <p>No diapers logged today.</p>
         {% endfor %}
     </div>
 
     <div class="log-section">
-        <h2>😴 Sleep</h2>
+        <h2>😴 Sleep & Naps</h2>
         {% for sleep in sleeps %}
-            <div class="log-item">{{ sleep.start_time|date:"h:i A" }} - {{ sleep.position }} ({{ sleep.duration }} min)</div>
+            <div class="log-item">
+                <strong>Started: {{ sleep.start_time|date:"h:i A" }}</strong>
+                {% if sleep.end_time %} - Ended: {{ sleep.end_time|date:"h:i A" }} ({{ sleep.duration }} mins){% else %} - (In Progress){% endif %}
+                | Position: {{ sleep.position }}
+            </div>
         {% empty %}
-            <p>No sleep logged today.</p>
+            <p>No sleep sessions logged today.</p>
         {% endfor %}
     </div>
 
+    <div class="log-section">
+        <h2>📏 Growth & Measurements</h2>
+        {% for growth in growth_logs %}
+            <div class="log-item">
+                <strong>{{ growth.time|date:"h:i A" }}</strong>: 
+                Weight: {{ growth.weight|default:"--" }} kg | 
+                Length: {{ growth.length|default:"--" }} cm | 
+                Head: {{ growth.head_circumference|default:"--" }} cm
+            </div>
+        {% empty %}
+            <p>No growth logs recorded today.</p>
+        {% endfor %}
+    </div>
 </body>
 </html>
